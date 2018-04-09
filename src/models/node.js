@@ -13,7 +13,7 @@ const UUID = require('uuid')
 
 const debug = require('debug')('node')
 
-const download = require('../lib/download')
+const Download = require('../lib/download')
 
 const Base = require('./state')
 
@@ -119,6 +119,7 @@ class Downloading extends State {
 
     let baselink = path.join(this.ctx.nodeDir, 'base')
     
+    /**
     this.download = download(url, this.tmpFile, err => {
       this.download = null
       if (err) return this.setState('Failed', err)
@@ -135,7 +136,31 @@ class Downloading extends State {
         })
       })
 
-    }) 
+    })
+    */
+
+    this.download = new Download(url, this.tmpFile)
+
+    this.download.on('error', err => {
+      this.download = null
+      rimraf(this.tmpFile, () => {})
+      this.setState('Idle', err)
+    })
+
+    this.download.on('finished', () => {
+      this.download = null
+      mkdirp(this.tmpDir, err => {
+        let cmd = `tar xJf ${this.tmpFile} -C ${this.tmpDir} --strip-components=1`
+        child.exec(cmd, (err, stdout, stderr) => {
+          fs.rename(this.tmpDir, this.target, err => {
+            fs.symlink(this.name, baselink, err => {
+              console.log(err)
+              this.setState('Idle')
+            })
+          })
+        })
+      })
+    })
   }
 }
 

@@ -17,7 +17,7 @@ class Broadcast {
 
   constructor () {
   
-    this.child = child.spawn( 
+    this.child = child.spawn()
   }
 }
 

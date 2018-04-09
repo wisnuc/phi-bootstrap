@@ -33,14 +33,14 @@ class Model extends EventEmitter {
   @param {string} root - deployment root directory, such as '/wisnuc'
   @param {string} githubUrl - the gihub release api url 
   @param {string} appBalls - local tarballs, with local (manifest), path, and config (package.json) in future.
+  @param {boolean} betaOn - whether use beta, true for betaOn
   @param {string} tagName - currently deployed version, such as '0.9.14'
-  @param {boolean} isBeta - true if currently deployed release is prerelease
   @param {boolean} globalNode - use globally installed node, rather than local one
   */
-  constructor(root, githubUrl, appBalls, tagName, isBeta, globalNode) {
+  constructor(root, githubUrl, appBalls, betaOn, tagName, globalNode) {
     super()
 
-    this.useBeta = false
+    this.betaOn = betaOn
     this.globalNode = !!globalNode
 
     this.root = root
@@ -66,9 +66,14 @@ class Model extends EventEmitter {
 
     this.appifi = null
 
+    process.on('uncaughtException', err => {
+      console.log('uncaughtException', err)
+      if (this.appifi) this.appifi.destroy()
+      process.exit()
+    })
+
     if (tagName) {
       this.appifi = new Appifi(this, tagName)
-      this.useBeta = !!isBeta
     }
 /**
 142 chroot ${TARGET} /bin/bash -c "apt -y install sudo initramfs-tools openssh-server parted vim-common tzdata net-tools iputils-ping"
@@ -82,7 +87,35 @@ class Model extends EventEmitter {
   }
 
   setBeta (val) {
-    this.useBeta == !!val
+    let value = !!val
+    // betaOn changed
+    if (this.betaOn !== value) {
+      let config = {}
+      try {
+        let raw = fs.readFileSync(path.join(this.root, 'bootstrap.config.json'))
+        config = JSON.parse(raw)
+      } catch (e) {
+        if (e.code !== 'ENOENT') {
+          console.log('error loading bootstrap.config.json', e)
+        }
+      }
+
+      config.betaOn = value
+      fs.writeFileSync(path.join(this.root, 'bootstrap.config.json', JSON.stringify(config)))
+      this.betaOn = value
+
+      // betaOn: true -> false
+      // 1. check current deployed release is prerelease or not, if it is, stop it.
+      // 2. reqSchedule
+      if (!value && this.appifi && this.appifi.isBeta()) {
+        this.appifi.stopAsync()
+        .then(() => { this.appifi = null })
+      }
+
+      // betaOn: false -> true
+      // in this case, current deployed release is stable, there is no need to stop it.
+      this.reqSchedule()
+    }
   }
 
   nodePath () {
@@ -125,7 +158,14 @@ class Model extends EventEmitter {
     this.scheduled = false
 
     // starting latest release download and stop all others
-    this.releases.forEach((r, i) => i === 0 ? r.start() : r.stop())
+    // if betaOn, download the latest, no matter it is prerelease or not
+    // if betaOff, download the latest stable
+    if (this.betaOn) {
+      this.releases.forEach((r, i) => i === 0 && r.getState() !== 'Stopped' ? r.start() : r.stop())
+    } else {
+      let index = this.releases.findIndex(r => {return r.isBeta() === false})
+      this.releases.forEach((r, i) => i === index && r.getState() !== 'Stopped' ? r.start() : r.stop())
+    }
 
     // if no appifi, start one (not necessarily latest)
     if (!this.appifi) {
@@ -201,7 +241,7 @@ class Model extends EventEmitter {
 
   view () {
     return {
-      beta: this.useBeta,
+      betaOn: this.betaOn,
       operation: this.operation,
       appifi: this.appifi ? this.appifi.view() : null,
       releases: this.releases.map(r => r.view()),

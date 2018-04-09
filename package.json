@@ -6,6 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "build": "node_modules/.bin/nexe src/app.js",
+    "dev": "node src/app.js --root tmptest --global-node",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "lewis.ma@winsuntech.cn",
@@ -20,6 +21,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.1",
+    "bcrypt": "^1.0.3",
     "body-parser": "^1.15.1",
     "debug": "^3.1.0",
     "express": "^4.13.4",
@@ -29,6 +31,11 @@
     "superagent": "^3.8.1",
     "tar-stream": "^1.5.2",
     "uuid": "^3.1.0",
-    "validator": "^6.0.0"
+    "validator": "^6.0.0",
+    "passport": "^0.4.0",
+    "passport-http": "^0.3.0",
+    "passport-jwt": "^3.0.0",
+    "passport-strategy": "^1.0.0",
+    "jwt-simple": "^0.5.1"
   }
 }

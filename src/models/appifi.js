@@ -43,7 +43,7 @@ class State {
       this.appifi = null
     }
 
-    exit()
+    this.exit()
   }
 
   start () {}
@@ -195,6 +195,10 @@ class Appifi extends EventEmitter {
     return this.ctx.nodePath()
   }
 
+  isBeta () {
+    return this.ctx.releases.find(r => r.tagName() === this.tagName).isBeta()
+  }
+
   // start may land started or failed
   start (callback = () => {}) {
     if (this.stopCbs.length) {
@@ -254,7 +258,8 @@ class Appifi extends EventEmitter {
   view () {
     return {
       state: this.getState(),
-      tagName: this.tagName
+      tagName: this.tagName,
+      isBeta: this.isBeta()
     }
   }
 
