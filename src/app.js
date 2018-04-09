@@ -18,6 +18,7 @@ const init = require('./init')
 const appRouter = require('./router/app')
 const Auth = require('./middleware/Auth')
 const createApp = require('./lib/express')
+const Channel = require('./models/channel')
 
 /** constants **/
 const githubUrl = 'https://api.github.com/repos/wisnuc/appifi-release/releases'
@@ -52,7 +53,7 @@ const createApp1 = (err, model) => {
     log: { skip: 'no', error: 'all' },
     routers: []
   }
-  
+
   opts.routers.push(err ? ['/v1', createErrorRouter(err)] : ['/v1', appRouter(auth, model)])
 
   return createApp(opts)
@@ -77,6 +78,15 @@ init(root, githubUrl, (err, model) => {
   } else 
     app = createApp1(null, model)
 
+  let options = {
+    key: fs.readFileSync('testdata/client-key.pem'),
+    cert: fs.readFileSync('testdata/client-cert.pem'),
+    ca: [ fs.readFileSync('testdata/ca-cert.pem') ]
+  }
+     
+
+  new Channel(model, options)
+  
   app.listen(3001, err => {
     if (err) {
       console.log('failed to listen on port 3001, process exit')

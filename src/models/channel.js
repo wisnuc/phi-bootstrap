@@ -46,8 +46,8 @@ class Connecting extends State {
 
   enter() {
     super.enter()
-    this.socket = tls.connect(this.ctx.port, this.ctx.addr, options, () => {
-      console.log('client connected', socket.authorized ? 'authorized' : 'unauthorized')
+    this.socket = tls.connect(this.ctx.port, this.ctx.addr, this.ctx.opts, () => {
+      console.log('client connected', this.socket.authorized ? 'authorized' : 'unauthorized')
       this.setState('Connected', this.socket)
     })
     this.socket.setEncoding('utf8')
@@ -56,7 +56,7 @@ class Connecting extends State {
   }
 
   exit() {
-    this.socket.removeAllListener()
+    this.socket.removeAllListeners()
     this.socket.on('error', () => {})
     this.socket = undefined
     super.exit()
@@ -75,7 +75,8 @@ class Connected extends State {
 
   enter(socket) {
     super.enter()
-    this.socket.removeAllListener()  // remove first
+    this.socket = socket
+    this.socket.removeAllListeners()  // remove first
     this.socket.on('data', data => {
       console.log(data)
     })
@@ -86,7 +87,7 @@ class Connected extends State {
   }
 
   exit() {
-    this.socket.removeAllListener()
+    this.socket.removeAllListeners()
     this.socket.on('error', () => {})
     super.exit()
   }
@@ -121,7 +122,7 @@ class Channel extends EventEmitter {
   handleCloudMessage(message) {
     if (this.handles.has(message.type)) 
       return this.handles.get(message.key)(message)
-    if (!isAppifiAvaliable) {} // return error
+    if (!this.isAppifiAvaliable) {} // return error
 
     //send to Appifi
   }
