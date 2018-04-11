@@ -78,12 +78,12 @@ class Account extends EventEmitter {
 
     let currUser = this.user
 
-    let nextUser = props.uid == currUser.uid ? Object.assign({}, this.user, props) : props
+    let nextUser = currUser && props.uid == currUser.uid ? Object.assign({}, this.user, props) : props
 
-    await this.commitUsesAsync(currUser, nextUser)
+    await this.commitUserAsync(currUser, nextUser)
 
-    return Object.assign(nextUser, { password: undefined })
-  
+    return Object.assign({}, nextUser, { password: undefined })
+
   }
 
 }

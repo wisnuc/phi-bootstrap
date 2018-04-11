@@ -117,9 +117,11 @@ class Model extends EventEmitter {
     })
   }
 
-  handleCloudAccountMessage(props) {
-    console.log('handleCloudAccountMessage', props)
-    this.account.updateUserAsync(props)
+  handleCloudAccountMessage(message) {
+    console.log('handleCloudAccountMessage', message)
+    this.account.updateUserAsync(message.user)
+      .then(() => {})
+      .catch(console.error)
     // TODO: Notify Appifi
   }
 

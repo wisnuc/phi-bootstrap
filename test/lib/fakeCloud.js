@@ -42,5 +42,16 @@ process.on('message', data => {
     client.write(JSON.stringify(obj))
   } else if(data === 'clientState') {
     process.send(JSON.stringify({ type:'clientState' ,state: client ? 'true' : 'false'}))
+  } else if(data === 'sendAccountInfo') {
+    obj = {
+      type: "CLOUD_ACCOUNT_INFO_MESSAGE",
+      user: {
+        uid: "5253e843-a289-45e3-8fb8-a1b9bbdb45ef",
+        password: '$2a$10$nUmDoy9SDdkPlj9yuYf2HulnbtvbF0Ei6rGF1G1UKUkJcldINaJVy', // password: 'alice'
+        username: "JackYang"
+      }
+    }
+    console.log('start notify account')
+    client.write(JSON.stringify(obj))
   }
 })
