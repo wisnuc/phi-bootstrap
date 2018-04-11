@@ -18,7 +18,6 @@ const init = require('./init')
 const appRouter = require('./router/app')
 const Auth = require('./middleware/Auth')
 const createApp = require('./lib/express')
-const Channel = require('./models/channel')
 
 /** constants **/
 const githubUrl = 'https://api.github.com/repos/wisnuc/appifi-release/releases'
@@ -33,17 +32,6 @@ const rootarg = process.argv
 const root = (rootarg && path.resolve(rootarg)) || '/wisnuc'
 
 console.log(`root is ${root}`)
-
-const html = `
-<html>
-  <title>WISNUC Bootstrap</title>
-  <body>
-    <p>请使用PC，Mac或移动应用程序访问此页面。</p>
-    <p>請使用PC，Mac或移動應用程序訪問此頁面。</p>
-    <p>Please use PC, Mac, or mobile apps to access this page.</p>
-  </body>
-</html>
-`
 
 const createApp1 = (err, model) => {
   let auth = new Auth('some secret', [])
@@ -77,15 +65,6 @@ init(root, githubUrl, (err, model) => {
     }
   } else 
     app = createApp1(null, model)
-
-  let options = {
-    key: fs.readFileSync('testdata/client-key.pem'),
-    cert: fs.readFileSync('testdata/client-cert.pem'),
-    ca: [ fs.readFileSync('testdata/ca-cert.pem') ]
-  }
-     
-
-  new Channel(model, options)
   
   app.listen(3001, err => {
     if (err) {

@@ -14,7 +14,7 @@ const bodyParser = require('body-parser')
 
 const expect = require('chai').expect
 
-const Model = require('src/models')
+const Model = require('../../src/models')
 
 const cwd = process.cwd()
 const tmptest = path.join(cwd, 'tmptest') 

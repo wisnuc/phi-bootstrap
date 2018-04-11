@@ -20,6 +20,11 @@ const Fetch = require('./fetch')
 const Release = require('./release')
 const Node = require('./node')
 const Deb = require('./deb')
+const Device = require('./device')
+const Channel = require('./channel') 
+const Account = require('./account')
+
+const Config = require('../lib/config')
 
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
 const EApp404 = Object.assign(new Error('app not installed'), { code: 'ENOTFOUND', status: 404 })
@@ -84,6 +89,42 @@ class Model extends EventEmitter {
 
     let names = ['libimage-exiftool-perl', 'imagemagick', 'ffmpeg']
     this.deb = new Deb(names)
+
+    let options = {
+      key: fs.readFileSync(path.join(__dirname, '../../testdata/client-key.pem')),
+      cert: fs.readFileSync(path.join(__dirname, '../../testdata/client-cert.pem')),
+      ca: [ fs.readFileSync(path.join(__dirname, '../../testdata/ca-cert.pem')) ]
+    }
+
+    let channelHandles = new Map()
+
+    channelHandles.set(Config.CLOUD_HARDWARE_MESSAGE, this.handleCloudAuthReq.bind(this))
+    channelHandles.set(Config.CLOUD_ACCOUNT_INFO_MESSAGE, this.handleCloudAccountMessage.bind(this))
+    channelHandles.set(Config.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
+
+    this.channel = new Channel(this, options, channelHandles)
+    this.device = new Device(this)
+
+    this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
+  }
+
+  handleCloudAuthReq(props) {
+    console.log('handleCloudAuthReq')
+    this.device.requestAuth(30 * 1000, (err, isAuth) => {
+      console.log('reqAuthFinshed', err, isAuth)
+      if(err) return this.channel.send({ type:Config.CLOUD_HARDWARE_MESSAGE, isAuth:false})
+      this.channel.send({ type:Config.CLOUD_HARDWARE_MESSAGE, isAuth})
+    })
+  }
+
+  handleCloudAccountMessage(props) {
+    console.log('handleCloudAccountMessage', props)
+    this.account.updateUserAsync(props)
+    // TODO: Notify Appifi
+  }
+
+  handleCloudChangePwdMessage(props) {
+
   }
 
   setBeta (val) {
@@ -181,6 +222,8 @@ class Model extends EventEmitter {
 
     if (this.appifi) this.appifi.stop()
     this.releases.forEach(r => r.stop())
+
+    this.channel.destroy()
   }
 
   /////////////////////////////////////////////////////////////////////////////

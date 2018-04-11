@@ -1,5 +1,16 @@
 const express = require('express')
 
+const html = `
+<html>
+  <title>WISNUC Bootstrap</title>
+  <body>
+    <p>请使用PC，Mac或移动应用程序访问此页面。</p>
+    <p>請使用PC，Mac或移動應用程序訪問此頁面。</p>
+    <p>Please use PC, Mac, or mobile apps to access this page.</p>
+  </body>
+</html>
+`
+
 module.exports = (auth, model) => {
   let router = express.Router()
   // GET whole view
