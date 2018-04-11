@@ -64,7 +64,6 @@ describe(path.basename(__filename), () => {
     this.timeout(0)
     fakeCloud = child.fork('./test/lib/fakeCloud.js')
     fakeCloud.on('message', data => {
-      console.log('response ===>' , data)
       let obj = JSON.parse(data)
       if (obj.type === 'clientState'){
         expect(obj.state).to.deep.equal('true')
@@ -83,7 +82,6 @@ describe(path.basename(__filename), () => {
     this.timeout(0)
     fakeCloud = child.fork('./test/lib/fakeCloud.js')
     fakeCloud.on('message', data => {
-      console.log('response ===>' , data)
       let obj = JSON.parse(data)
       if (obj.type === 'clientState'){
         expect(obj.state).to.deep.equal('true')
@@ -115,7 +113,6 @@ describe(path.basename(__filename), () => {
     this.timeout(0)
     fakeCloud = child.fork('./test/lib/fakeCloud.js')
     fakeCloud.on('message', data => {
-      console.log('response ===>' , data)
       let obj = JSON.parse(data)
       if (obj.type === 'clientState'){
         expect(obj.state).to.deep.equal('true')
@@ -149,7 +146,6 @@ describe(path.basename(__filename), () => {
     this.timeout(0)
     fakeCloud = child.fork('./test/lib/fakeCloud.js')
     fakeCloud.on('message', data => {
-      console.log('response ===>' , data)
       let obj = JSON.parse(data)
       if (obj.type === 'clientState'){
         expect(obj.state).to.deep.equal('true')

@@ -87,7 +87,7 @@ class Connecting extends State {
   enter() {
     super.enter()
     this.socket = tls.connect(this.ctx.port, this.ctx.addr, this.ctx.opts, () => {
-      console.log('client connected', this.socket.authorized ? 'authorized' : 'unauthorized')
+      // console.log('client connected', this.socket.authorized ? 'authorized' : 'unauthorized')
       this.setState('Connected', this.socket)
     })
     this.socket.setEncoding('utf8')
@@ -115,7 +115,7 @@ class Connected extends State {
     this.socket = socket
     this.socket.removeAllListeners()  // remove first
     this.socket.on('data', data => {
-      console.log('Cloud Message ===> ', data)
+      // console.log('Cloud Message ===> ', data)
       let message 
       try {
         message = JSON.parse(data)

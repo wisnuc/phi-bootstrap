@@ -18,7 +18,7 @@ let client = null
 
 const server = tls.createServer(options, socket => {
   client = socket
-  console.log('server connected', socket.authorized ? 'authorized' : 'unauthorized')
+  // console.log('server connected', socket.authorized ? 'authorized' : 'unauthorized')
   socket.write(`hello, welcome to server!\n`)
   socket.setEncoding('utf8')
   socket.on('data', data => {
@@ -28,7 +28,7 @@ const server = tls.createServer(options, socket => {
 })
 
 server.listen(8000, () => {
-  console.log('server bound')
+  // console.log('server bound')
   process.send(JSON.stringify({ type:"ServerStarted"}))
 })
 
@@ -38,7 +38,7 @@ process.on('message', data => {
     obj = {
       type: "CLOUD_HARDWARE_MESSAGE"
     }
-    console.log('need sendHardwareReq')
+    // console.log('need sendHardwareReq')
     client.write(JSON.stringify(obj))
   } else if(data === 'clientState') {
     process.send(JSON.stringify({ type:'clientState' ,state: client ? 'true' : 'false'}))

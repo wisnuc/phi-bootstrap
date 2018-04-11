@@ -109,16 +109,16 @@ class Model extends EventEmitter {
   }
 
   handleCloudAuthReq(props) {
-    console.log('handleCloudAuthReq')
+    // console.log('handleCloudAuthReq')
     this.device.requestAuth(30 * 1000, (err, isAuth) => {
-      console.log('reqAuthFinshed', err, isAuth)
+      // console.log('reqAuthFinshed', err, isAuth)
       if(err) return this.channel.send({ type:Config.CLOUD_HARDWARE_MESSAGE, isAuth:false})
       this.channel.send({ type:Config.CLOUD_HARDWARE_MESSAGE, isAuth})
     })
   }
 
   handleCloudAccountMessage(message) {
-    console.log('handleCloudAccountMessage', message)
+    // console.log('handleCloudAccountMessage', message)
     this.account.updateUserAsync(message.user)
       .then(() => {})
       .catch(console.error)
