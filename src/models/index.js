@@ -102,7 +102,7 @@ class Model extends EventEmitter {
     channelHandles.set(Config.CLOUD_ACCOUNT_INFO_MESSAGE, this.handleCloudAccountMessage.bind(this))
     channelHandles.set(Config.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
 
-    this.channel = new Channel(this, options, channelHandles)
+    this.channel = new Channel(this, 'localhost', 8000, options, channelHandles)
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))

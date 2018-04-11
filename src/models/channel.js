@@ -154,13 +154,13 @@ class Connected extends State {
  */
 class Channel extends EventEmitter {
 
-  constructor (ctx, opts, handles) {
+  constructor (ctx, addr, port, opts, handles) {
     super()
     this.ctx = ctx
     this.opts = opts
     this.handles = handles instanceof Map ? handles : new Map()
-    this.port = 8000
-    this.addr = 'localhost'
+    this.port = port
+    this.addr = addr
     new Connecting(this)    
   }
 
