@@ -69,17 +69,6 @@ class Model extends EventEmitter {
       this.reqSchedule()      
     })
 
-    this.appifi = null
-
-    process.on('uncaughtException', err => {
-      console.log('uncaughtException', err)
-      if (this.appifi) this.appifi.destroy()
-      process.exit()
-    })
-
-    if (tagName) {
-      this.appifi = new Appifi(this, tagName)
-    }
 /**
 142 chroot ${TARGET} /bin/bash -c "apt -y install sudo initramfs-tools openssh-server parted vim-common tzdata net-tools iputils-ping"
 143 chroot ${TARGET} /bin/bash -c "apt -y install avahi-daemon avahi-utils btrfs-tools udisks2"
@@ -106,6 +95,33 @@ class Model extends EventEmitter {
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
+
+    this.appifi = null
+
+    process.on('uncaughtException', err => {
+      console.log('uncaughtException', err)
+      if (this.appifi) this.appifi.destroy()
+      process.exit()
+    })
+
+    Object.defineProperty(this, 'appifi', {
+      get: function () {
+        return this._appifi
+      },
+      set: function(x) {
+        if(this._appifi) this._appifi.removeAllListeners()
+        this._appifi = x
+        this._appifi.on('Starting', this.sendAccountInfo.bind(this))
+      }
+    })
+
+    if (tagName) this.appifi = new Appifi(this, tagName)
+    
+  }
+
+  sendAccountInfo() {
+    let user = this.account.user ? this.account.user : null
+    if (this.appifi) this.appifi.sendMessage({ user })
   }
 
   handleCloudAuthReq(props) {
@@ -123,9 +139,18 @@ class Model extends EventEmitter {
       .then(() => {})
       .catch(console.error)
     // TODO: Notify Appifi
+    this.sendAccountInfo(message.user)
   }
 
-  handleCloudChangePwdMessage(props) {
+  handleCloudChangePwdMessage(message) {
+    this.account.updateUserPasswordAsync(message.user.password)
+      .then(() => {})
+      .catch(console.error)
+    // TODO: Notify Appifi ? complete user?
+    this.sendAccountInfo(message.user)
+  }
+
+  handleAppifiMessage(message) {
 
   }
 

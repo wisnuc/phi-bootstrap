@@ -255,6 +255,19 @@ class Appifi extends EventEmitter {
     return new Promise((res, rej) => this.stop(err => err ? rej(err) : res(null)))
   }
 
+  sendMessage(obj) {
+    let message
+    try {
+      message = JSON.stringify(obj)
+    } catch (error) {
+      console.log('[APPIFI]warning :', error)
+      return
+    }
+    if(!this.state.appifi) 
+      return console.log(`[APPIFI]warning : appifi in ${ this.state.constructor.name } state`)
+    this.state.appifi.send(message)
+  }
+
   view () {
     return {
       state: this.getState(),

@@ -21,7 +21,7 @@ const accountInfo = {
   username: "JackYang"
 }
 
-process.on("close", () => {
+process.on("uncaughtException", () => {
   if(fakeCloud) fakeCloud.kill()
     fakeCloud = undefined
   if(model) model.destroy()
@@ -92,6 +92,7 @@ describe(path.basename(__filename), () => {
           }, 1000)
         } else {
           console.log('client not found')
+          done(new Error('client not found'))
         }
       }
 
@@ -121,9 +122,10 @@ describe(path.basename(__filename), () => {
           setTimeout(() => {
             expect(model.device.ledState.currentState()).to.equal('LedAuth')
           }, 1000)
-          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 5000)
+          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 1000)
         } else {
           console.log('client not found')
+          done(new Error('client not found'))
         }
       }
 
@@ -154,9 +156,10 @@ describe(path.basename(__filename), () => {
           setTimeout(() => {
             expect(model.device.ledState.currentState()).to.equal('LedAuth')
           }, 1000)
-          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 5000)
+          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 1000)
         } else {
           console.log('client not found')
+          done(new Error('client not found'))
         }
       }
 
@@ -168,6 +171,50 @@ describe(path.basename(__filename), () => {
           expect(model.account.user).to.deep.equal(accountInfo)
           expect(JSON.parse(fs.readFileSync(userPath),toString())).to.deep.equal(accountInfo)
           done()
+        }, 500)
+        // done()
+      }
+
+      if (obj.type === 'ServerStarted') {
+        model = new Model(tmptest, githubUrl, [], null, null , true)
+        setTimeout(() => {
+          fakeCloud.send('clientState')
+        }, 1000)
+      }
+    })
+  })
+
+  it('should update account password success by cloud', function(done) {
+    this.timeout(0)
+    fakeCloud = child.fork('./test/lib/fakeCloud.js')
+    fakeCloud.on('message', data => {
+      let obj = JSON.parse(data)
+      if (obj.type === 'clientState'){
+        expect(obj.state).to.deep.equal('true')
+        if(obj.state === 'true') {
+          fakeCloud.send('sendHardwareReq')
+          setTimeout(() => {
+            expect(model.device.ledState.currentState()).to.equal('LedAuth')
+          }, 1000)
+          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 1000)
+        } else {
+          console.log('client not found')
+          done(new Error('client not found'))
+        }
+      }
+
+      if (obj.type === "CLOUD_HARDWARE_MESSAGE") {
+        expect(obj.isAuth).to.equal(true)
+        expect(model.device.ledState.currentState()).to.equal('LedIdle')
+        fakeCloud.send('sendAccountInfo')
+        setTimeout(() => {
+          expect(model.account.user).to.deep.equal(accountInfo)
+          expect(JSON.parse(fs.readFileSync(userPath),toString())).to.deep.equal(accountInfo)
+          fakeCloud.send('sendAccountChangePwd')
+          setTimeout(() => {
+            expect(model.account.user.password).to.deep.equal('$2a$10$nUmDoy9SDdkPlj9yuYf2HulnbtvbF0Ei6rGF1G1UKUkJcldINaJVy')
+            done()
+          }, 500)
         }, 500)
         // done()
       }

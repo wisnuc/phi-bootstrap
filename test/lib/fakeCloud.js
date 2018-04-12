@@ -53,5 +53,13 @@ process.on('message', data => {
     }
     console.log('start notify account')
     client.write(JSON.stringify(obj))
+  }else if(data === 'sendAccountChangePwd') {
+    obj = {
+      type:'CLOUD_CHANGE_PASSWARD_MESSAGE',
+      user: {
+        password: '$2a$10$nUmDoy9SDdkPlj9yuYf2HulnbtvbF0Ei6rGF1G1UKUkJcldINaJVy' // password: 'alice'
+      }
+    }
+    client.write(JSON.stringify(obj))
   }
 })

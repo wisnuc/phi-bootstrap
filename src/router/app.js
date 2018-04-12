@@ -27,6 +27,16 @@ module.exports = (auth, model) => {
     }
   })
 
+  router.get('/user', (req, res, next) => {
+     res.status(200).json(model.account.user ? model.account.user : null)
+  })
+
+  router.patch('/user/password', (req, res, next) => { 
+    model.account.updateUserPasswordAsync(req.body.password)
+      .then(u => res.status(200).json(u))
+      .catch(next)
+  })
+
   // Install App
   router.put('/app', (req, res, next) => 
     model.appInstall(req.body.tagName, err => err ? next(err) : res.status(200).end()))

@@ -86,6 +86,11 @@ class Account extends EventEmitter {
 
   }
 
+  async updateUserPasswordAsync (password) {
+    // FIXME: auth?
+    return await this.updateUserAsync ({ password })
+  }
+
 }
 
 module.exports = Account
