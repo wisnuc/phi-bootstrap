@@ -119,9 +119,9 @@ class Model extends EventEmitter {
     
   }
 
-  sendAccountInfo() {
-    let user = this.account.user ? this.account.user : null
-    if (this.appifi) this.appifi.sendMessage({ user })
+  sendAccountInfo(u) {
+    let user = u ? u : this.account.user ? this.account.user : null
+    if (this.appifi) this.appifi.sendMessage({ type:Config.APPIFI_ACCOUNT_INFO_MESSAGE, user })
   }
 
   handleCloudAuthReq(props) {

@@ -57,6 +57,7 @@ describe(path.basename(__filename), () => {
 
   beforeEach(() => {
     rimraf.sync(powerPath)
+    rimraf.sync(path.join(tmptest, 'user.json'))
     fs.writeFileSync(powerPath)
   })
 
@@ -225,6 +226,73 @@ describe(path.basename(__filename), () => {
           fakeCloud.send('clientState')
         }, 1000)
       }
+    })
+  })
+
+  describe('test appifi communicate', () => {
+    beforeEach(() => {
+      rimraf.sync(path.join(tmptest, 'tmp'))
+      mkdirp.sync(path.join(tmptest, 'tmp'))
+      rimraf.sync(path.join(tmptest, 'appifi'))
+      child.execSync(`cp -r ${ path.join(process.cwd(), 'testdata/appifi')}  ${ tmptest }`)
+    })
+
+    it('should send no user to appifi', function(done) {
+      this.timeout(0)
+      fakeCloud = child.fork('./test/lib/fakeCloud.js')
+      fakeCloud.on('message', data => {
+        let obj = JSON.parse(data)
+        if (obj.type === 'clientState'){
+          expect(obj.state).to.deep.equal('true')
+          if(obj.state === 'true') {
+            fakeCloud.send('sendNoAccount')
+            setTimeout(() => {
+              expect(model.account.user).to.equal(undefined)
+              let obj = JSON.parse(fs.readFileSync(path.join(tmptest, 'tmp/user')).toString())
+              expect(obj.user).to.be.equal(null)
+              done()
+            }, 1000)
+          } else {
+            console.log('client not found')
+            done(new Error('client not found'))
+          }
+        }
+        if (obj.type === 'ServerStarted') {
+          model = new Model(tmptest, githubUrl, [], null, '1.0.14' , true)
+          setTimeout(() => {
+            fakeCloud.send('clientState')
+          }, 1000)
+        }
+      })
+    })
+
+    it('should send user to appifi', function(done) {
+      this.timeout(0)
+      fakeCloud = child.fork('./test/lib/fakeCloud.js')
+      fakeCloud.on('message', data => {
+        let obj = JSON.parse(data)
+        if (obj.type === 'clientState'){
+          expect(obj.state).to.deep.equal('true')
+          if(obj.state === 'true') {
+            fakeCloud.send('sendAccountInfo')
+            setTimeout(() => {
+              expect(model.account.user).to.deep.equal(accountInfo)
+              let obj = JSON.parse(fs.readFileSync(path.join(tmptest, 'tmp/user')).toString())
+              expect(obj.user).to.be.deep.equal(accountInfo)
+              done()
+            }, 1000)
+          } else {
+            console.log('client not found')
+            done(new Error('client not found'))
+          }
+        }
+        if (obj.type === 'ServerStarted') {
+          model = new Model(tmptest, githubUrl, [], null, '1.0.14' , true)
+          setTimeout(() => {
+            fakeCloud.send('clientState')
+          }, 1000)
+        }
+      })
     })
   })
 

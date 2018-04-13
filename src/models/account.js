@@ -75,6 +75,9 @@ class Account extends EventEmitter {
   }
 
   async updateUserAsync (props) {
+    // unbind
+    if(!this.user && !props) return 
+    // TODO: jump to unbind && clean
 
     let currUser = this.user
 

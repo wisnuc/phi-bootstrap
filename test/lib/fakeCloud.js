@@ -53,7 +53,15 @@ process.on('message', data => {
     }
     console.log('start notify account')
     client.write(JSON.stringify(obj))
-  }else if(data === 'sendAccountChangePwd') {
+  }else if(data === 'sendNoAccount') {
+    obj = {
+      type: "CLOUD_ACCOUNT_INFO_MESSAGE",
+      user: null
+    }
+    console.log('start notify no account')
+    client.write(JSON.stringify(obj))
+  }
+  else if(data === 'sendAccountChangePwd') {
     obj = {
       type:'CLOUD_CHANGE_PASSWARD_MESSAGE',
       user: {
