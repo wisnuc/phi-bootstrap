@@ -169,7 +169,7 @@ class Channel extends EventEmitter {
       return this.handles.get(message.type)(message)
     if (!this.isAppifiAvaliable) {} // return error
 
-    //send to Appifi
+    // TODO: send to Appifi
   }
 
   isAppifiAvaliable() {

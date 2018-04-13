@@ -37,6 +37,12 @@ module.exports = (auth, model) => {
       .catch(next)
   })
 
+  router.get('/station/info', (req, res, next) => {
+    res.status(200).json({
+      state: model.channel.getState()
+    })
+  })
+
   // Install App
   router.put('/app', (req, res, next) => 
     model.appInstall(req.body.tagName, err => err ? next(err) : res.status(200).end()))
