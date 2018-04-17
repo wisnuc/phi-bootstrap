@@ -45,6 +45,28 @@ class LedBase {
 
   }
 
+  /*
+  listenEnterAuth(callback) {
+    let timer = setTimeout(() => {
+      callback(null, false)
+      callback = undefined
+      if( Array.isArray(this.enterHandler)) {
+        let index = this.enterHandler.findIndex( x => x === obj)
+        if(index !== -1) this.enterHandler = [...this.enterHandler.slice(0, index), ...this.enterHandler.slice(index + 1)]
+      }
+    }, 10 * 1000)
+
+    let obj = { callback, timer }
+
+    if (this.enterHandler && Array.isArray(this.enterHandler)) this.enterHandler.push(obj)
+    else this.enterHandler = [obj]
+  }
+
+  listenExitAuth(callback) {
+    
+  }
+  */
+
   currentState () {
     return this.constructor.name
   }
@@ -74,6 +96,17 @@ class LedAuth extends LedBase {
 
   enter (outState) {
     super.enter()
+
+    // notify observer
+    let enterListeners = this.ctx.enterAuthListeners 
+    if(Array.isArray(enterListeners))
+      enterListeners.forEach(x => {
+        clearTimeout(x[0])
+        x[1](null, true)
+      })
+    //clear enter listeners
+    this.ctx.enterAuthListeners = null
+    
     this.outState = outState
     this.writeState(this.constructor.name)
     this.timer = setTimeout(() => {
@@ -92,6 +125,12 @@ class LedAuth extends LedBase {
 
   exit () {
     clearTimeout(this.timer)
+    let exitAuthListeners = this.ctx.exitAuthListeners
+    if(Array.isArray(exitAuthListeners))
+      exitAuthListeners.forEach(x => {
+        clearTimeout(x[0])
+        x[1](null, true)
+      })
     super.exit()
   }
 }
@@ -110,6 +149,32 @@ class Device {
   constructor(ctx) {
     this.ctx = ctx
     new LedIdle(this)
+  }
+
+  addEnterAuthListener(callback) {
+    if (this.ledState.currentState() === 'LedAuth') return callback(null, true)
+    else {
+      let timer = setTimeout(() => {
+        let index = this.enterAuthListeners.findIndex(x => x === obj)
+        if(index !== -1)
+          this.enterAuthListeners = this.enterAuthListeners.splice(index)
+        callback(null, false)
+      }, 10 * 1000)
+      let obj = [timer, callback]
+      Array.isArray(this.enterAuthListeners) ? this.enterAuthListeners.push(obj) : this.enterAuthListeners = [obj]
+    }
+  }
+
+  addExitAuthListener(callback) {
+    let timeout = this.ledState.currentState() === 'LedAuth' ? 30 * 1000 : 40 * 1000
+    let timer = setTimeout(() => {
+      let index = this.exitAuthListeners.findIndex(x => x === obj)
+        if(index !== -1)
+          this.exitAuthListeners = this.exitAuthListeners.splice(index)
+        callback(null, false)
+    }, timeout)
+    let obj = [timer, callback]
+    Array.isArray(this.exitAuthListeners) ? this.exitAuthListeners.push(obj) : this.exitAuthListeners = [obj]
   }
   
   requestAuth (timeout, callback) {

@@ -37,6 +37,23 @@ module.exports = (auth, model) => {
       .catch(next)
   })
 
+  router.get('/observe/:observeName', (req, res, next) => {
+    let observeName = req.params.observeName
+    if (observeName === 'enterAuth') {
+      model.device.addEnterAuthListener((err, isEnter) => {
+        if(err) return next(err)
+        res.status(200).json({ success: isEnter })
+      })
+    } else if (observeName === 'exitAuth') {
+      model.device.addExitAuthListener((err, isExit) => {
+        if(err) return next(err)
+        res.status(200).json({ success: isExit })
+      })
+    } else {
+      res.status(404).json()
+    }
+  })
+
   router.get('/station/info', (req, res, next) => {
     res.status(200).json({
       state: model.channel.getState()
