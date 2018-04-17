@@ -99,13 +99,13 @@ class LedAuth extends LedBase {
 
     // notify observer
     let enterListeners = this.ctx.enterAuthListeners 
+    //clear enter listeners
+    this.ctx.enterAuthListeners = null
     if(Array.isArray(enterListeners))
       enterListeners.forEach(x => {
         clearTimeout(x[0])
         x[1](null, true)
       })
-    //clear enter listeners
-    this.ctx.enterAuthListeners = null
     
     this.outState = outState
     this.writeState(this.constructor.name)
@@ -126,6 +126,7 @@ class LedAuth extends LedBase {
   exit () {
     clearTimeout(this.timer)
     let exitAuthListeners = this.ctx.exitAuthListeners
+    this.ctx.exitAuthListeners = null
     if(Array.isArray(exitAuthListeners))
       exitAuthListeners.forEach(x => {
         clearTimeout(x[0])
@@ -157,7 +158,7 @@ class Device {
       let timer = setTimeout(() => {
         let index = this.enterAuthListeners.findIndex(x => x === obj)
         if(index !== -1)
-          this.enterAuthListeners = this.enterAuthListeners.splice(index)
+          this.enterAuthListeners = [...this.enterAuthListeners.slice(0, index), ...this.enterAuthListeners.slice(index + 1)]
         callback(null, false)
       }, 10 * 1000)
       let obj = [timer, callback]
@@ -170,7 +171,7 @@ class Device {
     let timer = setTimeout(() => {
       let index = this.exitAuthListeners.findIndex(x => x === obj)
         if(index !== -1)
-          this.exitAuthListeners = this.exitAuthListeners.splice(index)
+          this.exitAuthListeners = [...this.exitAuthListeners.slice(0, index), ...this.exitAuthListeners.slice(index + 1)]
         callback(null, false)
     }, timeout)
     let obj = [timer, callback]

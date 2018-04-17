@@ -24,6 +24,7 @@ describe(path.basename(__filename), () => {
     device.addEnterAuthListener((err, isEnter) => {
       if(err) return done(err)
       expect(isEnter).to.equal(false)
+      expect(device.enterAuthListeners).to.deep.equal([])
       done()
     })
   })
@@ -31,9 +32,10 @@ describe(path.basename(__filename), () => {
   it('should timeout  of observe exit auth state', function(done) {
     this.timeout(41 * 1000)
     let device = new Device()
-    device.addExitAuthListener((err, isEnter) => {
+    device.addExitAuthListener((err, isExit) => {
       if(err) return done(err)
-      expect(isEnter).to.equal(false)
+      expect(isExit).to.equal(false)
+      expect(device.exitAuthListeners).to.deep.equal([])
       done()
     })
   })
@@ -44,6 +46,7 @@ describe(path.basename(__filename), () => {
     device.addEnterAuthListener((err, isEnter) => {
       if(err) return done(err)
       expect(isEnter).to.equal(true)
+      expect(device.enterAuthListeners).to.equal(null)
       done()
     })
     setTimeout(() => {
@@ -51,12 +54,13 @@ describe(path.basename(__filename), () => {
     }, 3000)
   })
 
-  it.only('should return true of observe exit auth state', function(done) {
+  it('should return true of observe exit auth state', function(done) {
     this.timeout(41 * 1000)
     let device = new Device()
     device.addExitAuthListener((err, isExit) => {
       if(err) return done(err)
       expect(isExit).to.equal(true)
+      expect(device.exitAuthListeners).to.equal(null)
       done()
     })
     setTimeout(() => {
