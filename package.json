@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/app.js",
     "build": "node_modules/.bin/nexe src/app.js",
-    "dev": "node src/app.js --root tmptest --global-node",
+    "dev": "node src/app.js --root tmptest --global-node --standalone",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "lewis.ma@winsuntech.cn",
