@@ -80,7 +80,7 @@ class Starting extends State {
       stdio: ['ignore', 'inherit', 'inherit', 'ipc'] 
     }
     let appPath = path.join(this.ctx.appifiDir, 'build', 'app.js')
-    let args = [appPath]
+    let args = [appPath, ...process.argv.slice(2)]
 
     this.appifi = child.spawn(this.ctx.nodePath(), args, opts)
     this.appifi.on('error', err => console.log('Appifi Error in Starting: neglected', err))
