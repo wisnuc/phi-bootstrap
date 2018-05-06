@@ -27,6 +27,14 @@ module.exports = (auth, model) => {
     }
   })
 
+  // only used for test 
+  router.post('/boundUser', (req, res, next) => {
+    model.sendAccountInfo({
+      phicommUserId: '12345678'
+    })
+    res.status(200).end()
+  })
+
   router.get('/user', (req, res, next) => {
      res.status(200).json(model.account.user ? model.account.user : null)
   })
