@@ -29,9 +29,9 @@ module.exports = (auth, model) => {
 
   // only used for test 
   router.post('/boundUser', (req, res, next) => {
-    model.sendAccountInfo({
+    model.handleCloudAccountMessage({user: {
       phicommUserId: '12345678'
-    })
+    }})
     res.status(200).end()
   })
 
