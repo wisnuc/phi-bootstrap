@@ -87,11 +87,16 @@ class Model extends EventEmitter {
 
     let channelHandles = new Map()
 
-    channelHandles.set(Config.CLOUD_HARDWARE_MESSAGE, this.handleCloudAuthReq.bind(this))
+    channelHandles.set(Config.CLOUD_HARDWARE_MESSAGE, this.handleCloudTouchReq.bind(this))
     channelHandles.set(Config.CLOUD_ACCOUNT_INFO_MESSAGE, this.handleCloudAccountMessage.bind(this))
     channelHandles.set(Config.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
 
     this.channel = new Channel(this, 'localhost', 8000, options, channelHandles)
+    this.channel.on('Connected', () => {
+      // req device token
+      // this.channel.
+    })
+
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
@@ -125,12 +130,14 @@ class Model extends EventEmitter {
     if (this.appifi) this.appifi.sendMessage({ type:Config.APPIFI_ACCOUNT_INFO_MESSAGE, user })
   }
 
-  handleCloudAuthReq(props) {
-    // console.log('handleCloudAuthReq')
+  handleCloudTouchReq (message) {
+    console.log('handleCloudTouchReq')
+    let msgId = message.msgId
     this.device.requestAuth(30 * 1000, (err, isAuth) => {
-      // console.log('reqAuthFinshed', err, isAuth)
-      if(err) return this.channel.send({ type:Config.CLOUD_HARDWARE_MESSAGE, isAuth:false})
-      this.channel.send({ type:Config.CLOUD_HARDWARE_MESSAGE, isAuth})
+      console.log('TouchEnd', err, isAuth)
+      let status = isAuth ? 'ok' : 'timeout' 
+      if(err) console.log('Touch Error: ', err)
+      return this.channel.send(this.channel.createAckMessage(msgId, { status }))
     })
   }
 
@@ -152,6 +159,21 @@ class Model extends EventEmitter {
   }
 
   handleAppifiMessage(message) {
+
+  }
+
+  /**
+   * handle cloud user unbind message 
+   * @param {object} message
+   * @param {object} message.data
+   * @param {string} message.data.uid
+   * @param {string} message.data.deviceSN 
+   */
+  handleCloudUnbindNotice (message) {
+
+  }
+
+  handleCloudBindReq(message) {
 
   }
 

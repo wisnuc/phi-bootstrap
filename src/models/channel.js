@@ -1,5 +1,7 @@
 const tls = require('tls')
 const EventEmitter = require('events').EventEmitter
+const UUID = require('uuid')
+const os = require('os')
 
 const debug = require('debug')('bootstrap:connect')
 
@@ -128,6 +130,9 @@ class Connected extends State {
     this.socket.once('error', err => this.setState("Disconnect", err))
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
+
+    //send connect message
+    this.sendToCloud(this.ctx.reqConnectBody())
   }
 
   exit() {
@@ -161,15 +166,26 @@ class Channel extends EventEmitter {
     this.handles = handles instanceof Map ? handles : new Map()
     this.port = port
     this.addr = addr
+    this.msgQueue = new Map()
     new Connecting(this)    
   }
 
   handleCloudMessage(message) {
-    if (this.handles.has(message.type)) 
+    if (message.reqCmd && this.handles.has(message.reqCmd)) 
       return this.handles.get(message.type)(message)
-    if (!this.isAppifiAvaliable) {} // return error
-
-    // TODO: send to Appifi
+    if (message.type === 'pip') {
+      if (!this.isAppifiAvaliable) {} // return error
+    }
+    
+    if (message.type === 'ack') {
+      if (this.msgQueue.has(message.msgId)) {
+        let handle = this.msgQueue.get(message.msgId)
+        this.msgQueue.delete(message.msgId) // remove handle
+        return handle(message)
+      }
+      else return console.log('unhandle ack message: ',message)
+    }
+    
   }
 
   isAppifiAvaliable() {
@@ -186,6 +202,45 @@ class Channel extends EventEmitter {
 
   reconnect() {
 
+  }
+
+  reqConnectBody () {
+    let interfaces = os.networkInterfaces()
+    
+    let keys = Object.keys(interfaces).filter(k => !!k && k !== 'lo')
+    if (!keys.length) throw new Error('mac addr not found')
+
+    let interface = keys.find(k => Array.isArray(interfaces[k]) && interfaces[k].length)
+    if (!interface) throw new Error('network interface error')
+
+    let mac = interface[0].mac
+    
+    return this.createReqMessage('connect', {
+      deviceModel: 'PhiNAS2',
+      deviceSN: '1234567890',
+      MAC: mac,
+      swVer: 'v1.0.0',
+      hwVer: 'v1.0.0'
+    })
+  }
+
+
+
+  createReqMessage (reqCmd, data) {
+    return {
+      type: 'req',
+      msgId: UUID.v4(),
+      reqCmd,
+      data
+    }
+  }
+
+  createAckMessage (msgId, data) {
+    return {
+      type: 'ack',
+      msgId,
+      data
+    }
   }
 
   disconnect() {
