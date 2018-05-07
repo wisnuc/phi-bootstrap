@@ -210,10 +210,10 @@ class Channel extends EventEmitter {
     let keys = Object.keys(interfaces).filter(k => !!k && k !== 'lo')
     if (!keys.length) throw new Error('mac addr not found')
 
-    let interface = keys.find(k => Array.isArray(interfaces[k]) && interfaces[k].length)
-    if (!interface) throw new Error('network interface error')
+    let key = keys.find(k => Array.isArray(interfaces[k]) && interfaces[k].length)
+    if (!key) throw new Error('network interface error')
 
-    let mac = interface[0].mac
+    let mac = interfaces[key][0].mac
     
     return this.createReqMessage('connect', {
       deviceModel: 'PhiNAS2',
