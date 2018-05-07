@@ -121,6 +121,7 @@ class Model extends EventEmitter {
 
   sendAccountInfo(u) {
     let user = u ? u : this.account.user ? this.account.user : null
+    console.log('----', user)
     if (this.appifi) this.appifi.sendMessage({ type:Config.APPIFI_ACCOUNT_INFO_MESSAGE, user })
   }
 

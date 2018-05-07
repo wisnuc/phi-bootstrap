@@ -38,3 +38,11 @@ rm -r build1
 cd build
 
 sudo npm install
+
+apt-get update
+
+echo "Install avahi"
+apt-get -y install avahi-daemon avahi-utils
+
+echo "Install essential packages for whole system"
+apt-get -y install build-essential python-minimal openssh-server btrfs-tools imagemagick ffmpeg samba udisks2 curl
