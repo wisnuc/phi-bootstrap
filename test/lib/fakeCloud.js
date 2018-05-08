@@ -36,7 +36,8 @@ process.on('message', data => {
   let obj
   if (data === 'sendHardwareReq') {
     obj = {
-      type: "CLOUD_HARDWARE_MESSAGE"
+      type: "req",
+      reqCmd: 'touch'
     }
     // console.log('need sendHardwareReq')
     client.write(JSON.stringify(obj))
@@ -44,7 +45,7 @@ process.on('message', data => {
     process.send(JSON.stringify({ type:'clientState' ,state: client ? 'true' : 'false'}))
   } else if(data === 'sendAccountInfo') {
     obj = {
-      type: "CLOUD_ACCOUNT_INFO_MESSAGE",
+      reqCmd: "CLOUD_ACCOUNT_INFO_MESSAGE",
       user: {
         uid: "5253e843-a289-45e3-8fb8-a1b9bbdb45ef",
         password: '$2a$10$nUmDoy9SDdkPlj9yuYf2HulnbtvbF0Ei6rGF1G1UKUkJcldINaJVy', // password: 'alice'

@@ -172,7 +172,7 @@ class Channel extends EventEmitter {
 
   handleCloudMessage(message) {
     if (message.reqCmd && this.handles.has(message.reqCmd)) 
-      return this.handles.get(message.type)(message)
+      return this.handles.get(message.reqCmd)(message)
     if (message.type === 'pip') {
       if (!this.isAppifiAvaliable) {} // return error
     }

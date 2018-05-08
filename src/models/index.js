@@ -126,7 +126,7 @@ class Model extends EventEmitter {
 
   sendAccountInfo(u) {
     let user = u ? u : this.account.user ? this.account.user : null
-    console.log('----', user)
+    console.log('SendAccountInfoToAppifi: ', user)
     if (this.appifi) this.appifi.sendMessage({ type:Config.APPIFI_ACCOUNT_INFO_MESSAGE, user })
   }
 
@@ -143,17 +143,18 @@ class Model extends EventEmitter {
 
   handleCloudAccountMessage(message) {
     // console.log('handleCloudAccountMessage', message)
-    this.account.updateUserAsync(message.user)
-      .then(() => {})
-      .catch(console.error)
+    console.log(message)
+    this.account.updateUser(message.user, (err, data) => {
+      console.log(err ? err : data)
+    })
     // TODO: Notify Appifi
     this.sendAccountInfo(message.user)
   }
 
   handleCloudChangePwdMessage(message) {
-    this.account.updateUserPasswordAsync(message.user.password)
-      .then(() => {})
-      .catch(console.error)
+    this.account.updateUserPassword(message.user.password, (err, data) => {
+      console.log(err ? err : data)
+    })
     // TODO: Notify Appifi ? complete user?
     this.sendAccountInfo(message.user)
   }

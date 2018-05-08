@@ -40,9 +40,9 @@ module.exports = (auth, model) => {
   })
 
   router.patch('/user/password', (req, res, next) => { 
-    model.account.updateUserPasswordAsync(req.body.password)
-      .then(u => res.status(200).json(u))
-      .catch(next)
+    model.account.updateUserPassword(req.body.password, (err, data) => {
+      err ? next(err) : res.status(200).json(data)
+    })
   })
 
   router.get('/observe/:observeName', (req, res, next) => {
