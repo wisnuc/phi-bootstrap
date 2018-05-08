@@ -3,7 +3,7 @@ const EventEmitter = require('events').EventEmitter
 const UUID = require('uuid')
 const os = require('os')
 
-const debug = require('debug')('bootstrap:connect')
+const debug = require('debug')('Channel')
 
 const CONNECT_STATE = {
   DISCONNECTED : "DISCONNECTED",
@@ -71,7 +71,7 @@ class Disconnect extends State {
     }
     this.startTime = new Date().getTime()
 
-    this.timeout = 5000
+    this.timeout = 30 * 1000
     
     this.timer = setTimeout(() => this.setState('Connecting'), this.timeout)
   }
@@ -89,7 +89,7 @@ class Connecting extends State {
   enter() {
     super.enter()
     this.socket = tls.connect(this.ctx.port, this.ctx.addr, this.ctx.opts, () => {
-      // console.log('client connected', this.socket.authorized ? 'authorized' : 'unauthorized')
+      console.log('*****client connected*****', this.socket.authorized ? 'authorized' : 'unauthorized')
       this.setState('Connected', this.socket)
     })
     this.socket.setEncoding('utf8')
@@ -217,7 +217,7 @@ class Channel extends EventEmitter {
     
     return this.createReqMessage('connect', {
       deviceModel: 'PhiNAS2',
-      deviceSN: '1234567890',
+      deviceSN: '1plp0panrup3jqphe',
       MAC: mac,
       swVer: 'v1.0.0',
       hwVer: 'v1.0.0'

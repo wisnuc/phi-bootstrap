@@ -78,11 +78,10 @@ class Model extends EventEmitter {
 
     let names = ['libimage-exiftool-perl', 'imagemagick', 'ffmpeg']
     this.deb = new Deb(names)
-
+    //ca: [ fs.readFileSync(path.join(process.cwd(), 'testdata/ca-cert.pem')) ]
     let options = {
-      key: fs.readFileSync(path.join(__dirname, '../../testdata/client-key.pem')),
-      cert: fs.readFileSync(path.join(__dirname, '../../testdata/client-cert.pem')),
-      ca: [ fs.readFileSync(path.join(__dirname, '../../testdata/ca-cert.pem')) ]
+      key: fs.readFileSync(path.join(process.cwd(), 'testdata/clientkey.pem')),
+      cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem'))
     }
 
     let channelHandles = new Map()
@@ -91,10 +90,10 @@ class Model extends EventEmitter {
     channelHandles.set(Config.CLOUD_ACCOUNT_INFO_MESSAGE, this.handleCloudAccountMessage.bind(this))
     channelHandles.set(Config.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
 
-    this.channel = new Channel(this, 'localhost', 8000, options, channelHandles)
+    this.channel = new Channel(this, 'sohon2test.phicomm.com', 443, options, channelHandles)
     this.channel.on('Connected', () => {
       // req device token
-      // this.channel.
+      // this.channel
     })
 
     this.device = new Device(this)
