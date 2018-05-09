@@ -181,16 +181,16 @@ class Model extends EventEmitter {
    *    type: 'ack'
    *    msgId: 'xxx'
    *    data: {
-   *       bindedUid: "" //　设备绑定用户phicomm uid, 未绑定时值为０
+   *       uid: "" //　设备绑定用户phicomm uid, 未绑定时值为０
    *    }
    * } 
    */
   handleCloudBoundUserMessage (message) {
     let data = message.data
     if (!data) return
-    if (!data.hasOwnProperty('bindedUid')) return
+    if (!data.hasOwnProperty('uid')) return
     let props = {
-      phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
+      phicommUserId: data.uid === '0' ? null : data.uid
     }
     this.account.updateUser(props, (err, data) => {
       // notify appifi
@@ -209,7 +209,10 @@ class Model extends EventEmitter {
     } catch (e) { return console.log(e)}
     if (obj.type === Cmd.FROM_APPIFI_USERS_CMD) {
       if (Array.isArray(obj.users))
-        return this.channel.send(obj.users)
+        return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
+          userList: obj.users,
+          deviceSN: '1plp0panrup3jqphe'
+        }))
       else return console.log('invild users', obj)
     }
   }
@@ -233,18 +236,16 @@ class Model extends EventEmitter {
    *    reqCmd: 'bind'
    *    msgId: 'xxx'
    *    data: {
-   *      bindedUid: 'xxxx'  //required
+   *      uid: 'xxxx'  //required
    *    }
    * }
    */
   handleCloudBindReq(message) {
-    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('bindedUid')) {
-      console.log('!!!!+++++++>>>>> error 1')
+    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('uid')) {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
-    let props = { phicommUserId: message.data.bindedUid }
+    let props = { phicommUserId: message.data.uid }
     this.account.updateUser(props, (err, data) => {
-      console.log('!!!!+++++++>>>>> error 2', err)
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
       this.sendBoundUserToAppifi(props)
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'success' }))
