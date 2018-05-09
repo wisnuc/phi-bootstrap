@@ -25,6 +25,10 @@ const Channel = require('./channel')
 const Account = require('./account')
 
 const Config = require('../lib/config')
+const Cmd = Config.cmd
+const ServerConf =  Config.server
+
+const getMac = require('../lib/net').getMac
 
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
 const EApp404 = Object.assign(new Error('app not installed'), { code: 'ENOTFOUND', status: 404 })
@@ -86,15 +90,13 @@ class Model extends EventEmitter {
 
     let channelHandles = new Map()
 
-    channelHandles.set(Config.CLOUD_HARDWARE_MESSAGE, this.handleCloudTouchReq.bind(this))
-    channelHandles.set(Config.CLOUD_ACCOUNT_INFO_MESSAGE, this.handleCloudAccountMessage.bind(this))
-    channelHandles.set(Config.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
+    channelHandles.set(Cmd.FROM_CLOUD_TOUCH_CMD, this.handleCloudTouchReq.bind(this))
+    channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
+    channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
 
-    this.channel = new Channel(this, 'sohon2test.phicomm.com', 443, options, channelHandles)
-    this.channel.on('Connected', () => {
-      // req device token
-      // this.channel
-    })
+    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
+
+    this.channel.on('Connected', this.handleChannelConnected.bind(this))
 
     this.device = new Device(this)
 
@@ -115,7 +117,8 @@ class Model extends EventEmitter {
       set: function(x) {
         if(this._appifi) this._appifi.removeAllListeners()
         this._appifi = x
-        this._appifi.on('Starting', this.sendAccountInfo.bind(this))
+        // this._appifi.on('Starting', this.sendAccountInfo.bind(this))
+        this._appifi.on('message', this.handleAppifiMessage.bind(this))
       }
     })
 
@@ -123,10 +126,10 @@ class Model extends EventEmitter {
     
   }
 
-  sendAccountInfo(u) {
-    let user = u ? u : this.account.user ? this.account.user : null
-    console.log('SendAccountInfoToAppifi: ', user)
-    if (this.appifi) this.appifi.sendMessage({ type:Config.APPIFI_ACCOUNT_INFO_MESSAGE, user })
+  sendBoundUserToAppifi(user) {
+    // let user = u ? u : this.account.user ? this.account.user : null
+    console.log('sendBoundUserToAppifi: ', user)
+    if (this.appifi) this.appifi.sendMessage({ type:Cmd.TO_APPIFI_BOUND_USER_CMD, data:user.phicommUserId ? user : null })
   }
 
   handleCloudTouchReq (message) {
@@ -140,26 +143,75 @@ class Model extends EventEmitter {
     })
   }
 
-  handleCloudAccountMessage(message) {
-    // console.log('handleCloudAccountMessage', message)
-    console.log(message)
-    this.account.updateUser(message.user, (err, data) => {
-      console.log(err ? err : data)
+  /**
+   * 1. req 发送设备接入请求 to Cloud
+   * 2. 1返回结果　包括　boundUser
+   * 3. 发送boundUser to Appifi 
+   * 4. req 发送Token请求 To Cloud
+   * 5. 4返回Token
+   * 6. 发送Token To Appifi
+   */
+  handleChannelConnected () {
+    // create connect message
+    let mac = getMac()
+    if (!mac) throw new Error('mac not found')
+    let connectBody = this.channel.createReqMessage(Cmd.TO_CLOUD_CONNECT_CMD, {
+      deviceModel: 'PhiNAS2',
+      deviceSN: '1plp0panrup3jqphe',
+      MAC: mac,
+      swVer: 'v1.0.0',
+      hwVer: 'v1.0.0'
     })
-    // TODO: Notify Appifi
-    this.sendAccountInfo(message.user)
+    this.channel.send(connectBody, message => {
+      // message inclouds boundUserInfo
+      console.log('***** ConnectReq Resp******\n', message)
+      this.handleCloudBoundUserMessage(message)
+      this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_GET_TOKEN_CMD, {}), message => {
+        // message inclouds Token
+        console.log('***** GetToken Resp******\n', message)
+        if (this.appifi) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: message.data })
+      })
+    })
+  }
+
+  /**
+   * 
+   * @param {obj} message
+   * {
+   *    type: 'ack'
+   *    msgId: 'xxx'
+   *    data: {
+   *       bindedUid: "" //　设备绑定用户phicomm uid, 未绑定时值为０
+   *    }
+   * } 
+   */
+  handleCloudBoundUserMessage (message) {
+    let data = message.data
+    if (!data) return
+    if (!data.hasOwnProperty('bindUid')) return
+    let props = {
+      phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
+    }
+    this.account.updateUser(props, (err, data) => {
+      // notify appifi
+      this.sendBoundUserToAppifi(props)
+    })
   }
 
   handleCloudChangePwdMessage(message) {
-    this.account.updateUserPassword(message.user.password, (err, data) => {
-      console.log(err ? err : data)
-    })
-    // TODO: Notify Appifi ? complete user?
-    this.sendAccountInfo(message.user)
+    
   }
 
   handleAppifiMessage(message) {
-
+    let obj
+    try {
+      obj = JSON.parse(message)
+    } catch (e) { return console.log(e)}
+    if (obj.type === Cmd.FROM_APPIFI_USERS_CMD) {
+      if (Array.isArray(obj.users))
+        return this.channel.send(obj.users)
+      else return console.log('invild users', obj)
+    }
   }
 
   /**
@@ -170,11 +222,31 @@ class Model extends EventEmitter {
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
-
+    let props = { phicommUserId: null }
   }
 
+  /**
+   * 
+   * @param {object} message 
+   * {
+   *    type: 'req'
+   *    reqCmd: 'bind'
+   *    msgId: 'xxx'
+   *    data: {
+   *      bindedUid: 'xxxx'  //required
+   *    }
+   * }
+   */
   handleCloudBindReq(message) {
-
+    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty(bindedUid)) {
+      return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
+    }
+    let props = { phicommUserId: message.data.bindedUid }
+    this.account.updateUser(props, (err, data) => {
+      if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
+      this.sendBoundUserToAppifi(props)
+      return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'success' }))
+    })
   }
 
   setBeta (val) {

@@ -1,7 +1,6 @@
 const tls = require('tls')
 const EventEmitter = require('events').EventEmitter
 const UUID = require('uuid')
-const os = require('os')
 
 const debug = require('debug')('bootstrap:Channel')
 
@@ -114,6 +113,7 @@ class Connected extends State {
 
   enter(socket) {
     super.enter()
+    this.messageBuf = Buffer.from('')
     this.socket = socket
     this.socket.removeAllListeners()  // remove first
     this.socket.on('data', data => {
@@ -130,9 +130,6 @@ class Connected extends State {
     this.socket.once('error', err => this.setState("Disconnect", err))
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
-
-    //send connect message
-    this.sendToCloud(this.ctx.reqConnectBody())
   }
 
   exit() {
@@ -144,7 +141,8 @@ class Connected extends State {
 
   sendToCloud(obj) {
     debug(obj)
-    this.socket.write(JSON.stringify(obj))
+    let a = JSON.stringify(obj) + '\n'
+    this.socket.write(a)
   }
 
 }
@@ -172,12 +170,11 @@ class Channel extends EventEmitter {
   }
 
   handleCloudMessage(message) {
-    if (message.reqCmd && this.handles.has(message.reqCmd)) 
+    if (message.type === 'req' && this.handles.has(message.reqCmd)) 
       return this.handles.get(message.reqCmd)(message)
     if (message.type === 'pip') {
       if (!this.isAppifiAvaliable) {} // return error
     }
-    
     if (message.type === 'ack') {
       if (this.msgQueue.has(message.msgId)) {
         let handle = this.msgQueue.get(message.msgId)
@@ -186,7 +183,7 @@ class Channel extends EventEmitter {
       }
       else return console.log('unhandle ack message: ',message)
     }
-    
+    console.log('****Miss Channdle Message****', message)
   }
 
   isAppifiAvaliable() {
@@ -197,7 +194,8 @@ class Channel extends EventEmitter {
     return this.state.constructor.name
   }
 
-  send(obj) {
+  send(obj, callback) {
+    if (obj.type === 'req' && callback) this.msgQueue.set(obj.msgId, callback)
     this.state.sendToCloud(obj)
   }
 

@@ -18,6 +18,12 @@ const validateUser = (user) => {
 
 }
 
+/**
+ * Accound struct
+ * {
+ *    phicommUid: 'xxx'  // string
+ * }
+ */
 class Account extends EventEmitter {
 
   constructor (ctx, src, tmp) {
@@ -39,17 +45,22 @@ class Account extends EventEmitter {
     })
   }
 
+  /**
+   * 
+   * @param {object} props 
+   * @param {function} callback
+   * @param {string} props.phicommUserId // required 
+   */
   updateUser (props, callback) {
-    
     this.store.save(user => {
       // unbind
-      if(!user && !props) throw new Error()
+      if(!user && !props) return user
+      if(!props.phicommUserId || props.phicommUserId === '0') return null
       // TODO: jump to unbind && clean
       let currUser = user ? Object.assign({}, user) : null
-      let nextUser = currUser && props.uid == currUser.uid ? Object.assign({}, this.user, props) : props
+      let nextUser = currUser && props.phicommUserId == currUser.phicommUserId ? Object.assign({}, this.user, props) : props
       return nextUser
     }, (err, data) => err ? callback(err) : callback(null, Object.assign({}, data, { password: undefined })))
-
   }
 
   updateUserPassword (password, callback) {

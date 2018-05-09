@@ -7,7 +7,7 @@ const EventEmitter = require('events')
 const rimraf = require('rimraf')
 const mkdirp = require('mkdirp')
 
-const debug = require('debug')('model')
+const debug = require('debug')('bootstrap:appifi')
 
 /**
 nexe does not work properly for unknown reason.
@@ -112,7 +112,7 @@ class Started extends State {
     this.appifi = appifi
     this.appifi.on('error', err => console.log('Appifi Error in Started: neglected', err))
     this.appifi.on('close', (code, signal) => (this.appifi = null, this.setState('Failed', { code, signal})))
-
+    this.appifi.on('message', message => this.ctx.emit('message', message))
     // this.ctx.ctx.emit('appifiStarted')
   }
 
@@ -260,7 +260,7 @@ class Appifi extends EventEmitter {
     try {
       message = JSON.stringify(obj)
     } catch (error) {
-      console.log('[APPIFI]warning :', error)
+      console.log('[APPIFI]warning :', error, message)
       return
     }
     if(!this.state.appifi) 
