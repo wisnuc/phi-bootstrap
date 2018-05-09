@@ -124,10 +124,12 @@ class Model extends EventEmitter {
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
+    this.cloudToken = undefined
   }
 
   handleAppifiStarted () {
     if (this.account.user) this.sendBoundUserToAppifi(this.account.user)
+    if (this.cloudToken) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: { token: this.cloudToken } })
   }
 
   sendBoundUserToAppifi(user) {
@@ -173,6 +175,7 @@ class Model extends EventEmitter {
       this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_GET_TOKEN_CMD, {}), message => {
         // message inclouds Token
         console.log('***** GetToken Resp******\n', message)
+        this.cloudToken = message.data.token
         if (this.appifi) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: message.data })
       })
     })
