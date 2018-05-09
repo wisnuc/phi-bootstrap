@@ -3,7 +3,7 @@ const EventEmitter = require('events').EventEmitter
 const UUID = require('uuid')
 const os = require('os')
 
-const debug = require('debug')('Channel')
+const debug = require('debug')('bootstrap:Channel')
 
 const CONNECT_STATE = {
   DISCONNECTED : "DISCONNECTED",
@@ -143,6 +143,7 @@ class Connected extends State {
   }
 
   sendToCloud(obj) {
+    debug(obj)
     this.socket.write(JSON.stringify(obj))
   }
 
@@ -214,7 +215,7 @@ class Channel extends EventEmitter {
     if (!key) throw new Error('network interface error')
 
     let mac = interfaces[key][0].mac
-    
+    console.log('*****report mac*****', mac)
     return this.createReqMessage('connect', {
       deviceModel: 'PhiNAS2',
       deviceSN: '1plp0panrup3jqphe',
