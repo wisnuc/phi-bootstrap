@@ -97,8 +97,11 @@ describe(path.basename(__filename), () => {
         }
       }
 
-      if (obj.type === "CLOUD_HARDWARE_MESSAGE") {
-        expect(obj.isAuth).to.equal(false)
+      if (obj.type === "ack") {
+        console.log(obj)
+        expect(obj.data).to.deep.equal({
+          status: 'timeout'
+        })
         done()
       }
 
@@ -130,8 +133,10 @@ describe(path.basename(__filename), () => {
         }
       }
 
-      if (obj.type === "CLOUD_HARDWARE_MESSAGE") {
-        expect(obj.isAuth).to.equal(true)
+      if (obj.type === "ack") {
+        expect(obj.data).to.deep.equal({
+          status: 'ok'
+        })
         expect(model.device.ledState.currentState()).to.equal('LedIdle')
         done()
       }
@@ -145,7 +150,7 @@ describe(path.basename(__filename), () => {
     })
   })
 
-  it('should save account info', function(done) {
+  it.only('should save account info', function(done) {
     this.timeout(0)
     fakeCloud = child.fork('./test/lib/fakeCloud.js')
     fakeCloud.on('message', data => {
@@ -164,8 +169,13 @@ describe(path.basename(__filename), () => {
         }
       }
 
-      if (obj.type === "CLOUD_HARDWARE_MESSAGE") {
-        expect(obj.isAuth).to.equal(true)
+      if (obj.type === "ack") {
+        expect(obj).to.deep.equal({
+          type: 'ack',
+          data: {
+            status: 'ok'
+          }
+        })
         expect(model.device.ledState.currentState()).to.equal('LedIdle')
         fakeCloud.send('sendAccountInfo')
         setTimeout(() => {

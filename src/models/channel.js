@@ -1,9 +1,8 @@
 const tls = require('tls')
 const EventEmitter = require('events').EventEmitter
 const UUID = require('uuid')
-const os = require('os')
 
-const debug = require('debug')('bootstrap:connect')
+const debug = require('debug')('bootstrap:Channel')
 
 const CONNECT_STATE = {
   DISCONNECTED : "DISCONNECTED",
@@ -71,7 +70,7 @@ class Disconnect extends State {
     }
     this.startTime = new Date().getTime()
 
-    this.timeout = 5000
+    this.timeout = 30 * 1000
     
     this.timer = setTimeout(() => this.setState('Connecting'), this.timeout)
   }
@@ -89,7 +88,7 @@ class Connecting extends State {
   enter() {
     super.enter()
     this.socket = tls.connect(this.ctx.port, this.ctx.addr, this.ctx.opts, () => {
-      // console.log('client connected', this.socket.authorized ? 'authorized' : 'unauthorized')
+      console.log('*****client connected*****', this.socket.authorized ? 'authorized' : 'unauthorized')
       this.setState('Connected', this.socket)
     })
     this.socket.setEncoding('utf8')
@@ -114,6 +113,7 @@ class Connected extends State {
 
   enter(socket) {
     super.enter()
+    this.messageBuf = Buffer.from('')
     this.socket = socket
     this.socket.removeAllListeners()  // remove first
     this.socket.on('data', data => {
@@ -130,9 +130,6 @@ class Connected extends State {
     this.socket.once('error', err => this.setState("Disconnect", err))
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
-
-    //send connect message
-    this.sendToCloud(this.ctx.reqConnectBody())
   }
 
   exit() {
@@ -143,7 +140,9 @@ class Connected extends State {
   }
 
   sendToCloud(obj) {
-    this.socket.write(JSON.stringify(obj))
+    debug(obj)
+    let a = JSON.stringify(obj) + '\n'
+    this.socket.write(a)
   }
 
 }
@@ -171,12 +170,11 @@ class Channel extends EventEmitter {
   }
 
   handleCloudMessage(message) {
-    if (message.reqCmd && this.handles.has(message.reqCmd)) 
-      return this.handles.get(message.type)(message)
+    if (message.type === 'req' && this.handles.has(message.reqCmd)) 
+      return this.handles.get(message.reqCmd)(message)
     if (message.type === 'pip') {
       if (!this.isAppifiAvaliable) {} // return error
     }
-    
     if (message.type === 'ack') {
       if (this.msgQueue.has(message.msgId)) {
         let handle = this.msgQueue.get(message.msgId)
@@ -185,7 +183,7 @@ class Channel extends EventEmitter {
       }
       else return console.log('unhandle ack message: ',message)
     }
-    
+    console.log('****Miss Channdle Message****', message)
   }
 
   isAppifiAvaliable() {
@@ -196,7 +194,8 @@ class Channel extends EventEmitter {
     return this.state.constructor.name
   }
 
-  send(obj) {
+  send(obj, callback) {
+    if (obj.type === 'req' && callback) this.msgQueue.set(obj.msgId, callback)
     this.state.sendToCloud(obj)
   }
 
@@ -214,10 +213,10 @@ class Channel extends EventEmitter {
     if (!key) throw new Error('network interface error')
 
     let mac = interfaces[key][0].mac
-    
+    console.log('*****report mac*****', mac)
     return this.createReqMessage('connect', {
       deviceModel: 'PhiNAS2',
-      deviceSN: '1234567890',
+      deviceSN: '1plp0panrup3jqphe',
       MAC: mac,
       swVer: 'v1.0.0',
       hwVer: 'v1.0.0'

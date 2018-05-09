@@ -5,8 +5,8 @@ const bcrypt = require('bcrypt')
 const UUID = require('uuid')
 const deepFreeze = require('deep-freeze')
 
+const DataStore = require('../lib/DataStore')
 const E = require('../lib/error')
-const { saveObjectAsync, passwordEncrypt, unixPasswordEncrypt, md4Encrypt } = require('../lib/utils')
 
 const userEntryMProps = [
   'uid',
@@ -18,80 +18,54 @@ const validateUser = (user) => {
 
 }
 
+/**
+ * Accound struct
+ * {
+ *    phicommUid: 'xxx'  // string
+ * }
+ */
 class Account extends EventEmitter {
 
   constructor (ctx, src, tmp) {
     
     super()
-
     this.ctx = ctx
+    this.store = new DataStore({
+      file: src,
+      tmpDir: tmp,
+      isArray: false
+    })
 
-    this.filePath = src
-    this.tmpDir = tmp
+    this.store.on('Update', (...args) => this.emit('Update', ...args))
 
-    try {
-      this.user = JSON.parse(fs.readFileSync(this.filePath))
-    } catch (e) {
-      if (e.code !== 'ENOENT') throw e
-      this.user = undefined
-    }
-
-    validateUser(this.user)
-    if(this.user) deepFreeze(this.user)
-
-    /**
-    @member {boolean} lock - internal file operation lock
-    */
-    this.lock = false
+    Object.defineProperty(this, 'user', {
+      get () {
+        return this.store.data
+      }
+    })
   }
 
-  async commitUserAsync(currUser, nextUser) {
-
-    // referential equality check
-    if (currUser !== this.user) throw E.ECOMMITFAIL()
-
-    // check atomic operation lock
-    if (this.lock === true) throw E.ECOMMITFAIL()
-    
-    //validate
-    validateUser(nextUser)
-
-    // get lock
-    this.lock = true
-    try {
-
-      // save to file
-      await saveObjectAsync(this.filePath, this.tmpDir, nextUser)
-
-      // update in-memory object
-      this.user = nextUser
-
-      // enforce immutability
-      deepFreeze(this.user)
-    } finally {
-      // put lock
-      this.lock = false
-    }
+  /**
+   * 
+   * @param {object} props 
+   * @param {function} callback
+   * @param {string} props.phicommUserId // required 
+   */
+  updateUser (props, callback) {
+    this.store.save(user => {
+      // unbind
+      if(!user && !props) return user
+      if(!props.phicommUserId || props.phicommUserId === '0') return null
+      // TODO: jump to unbind && clean
+      let currUser = user ? Object.assign({}, user) : null
+      let nextUser = currUser && props.phicommUserId == currUser.phicommUserId ? Object.assign({}, this.user, props) : props
+      return nextUser
+    }, (err, data) => err ? callback(err) : callback(null, Object.assign({}, data, { password: undefined })))
   }
 
-  async updateUserAsync (props) {
-    // unbind
-    if(!this.user && !props) return 
-    // TODO: jump to unbind && clean
-
-    let currUser = this.user
-
-    let nextUser = currUser && props.uid == currUser.uid ? Object.assign({}, this.user, props) : props
-
-    await this.commitUserAsync(currUser, nextUser)
-
-    return Object.assign({}, nextUser, { password: undefined })
-
-  }
-
-  async updateUserPasswordAsync (password) {
+  updateUserPassword (password, callback) {
     // FIXME: auth?
-    return await this.updateUserAsync ({ password })
+    return this.updateUser({ password }, callback)
   }
 
 }

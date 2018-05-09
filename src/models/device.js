@@ -4,9 +4,9 @@ const path = require('path')
 
 const debug = require('debug')('bootstrap:device')
 
-const POWER_EVENT = path.join(__dirname, '../../tmptest/power')
+const POWER_EVENT = path.join(process.cwd(), 'tmptest/power')
 
-const LED_EVENT = '../../tmptest/led'
+const LED_EVENT = path.join(process.cwd(), 'tmptest/led')
 
 class LedBase {
   constructor(ctx, ...args) {
