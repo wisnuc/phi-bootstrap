@@ -194,13 +194,15 @@ class Model extends EventEmitter {
    */
   handleCloudBoundUserMessage (message) {
     let data = message.data
+    console.log('**************', data)
     if (!data) return
-    if (!data.hasOwnProperty('binedUid')) return
+    if (!data.hasOwnProperty('bindedUid')) return
     let props = {
-      phicommUserId: data.binedUid === '0' ? null : data.binedUid
+      phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
     }
     this.account.updateUser(props, (err, data) => {
       // notify appifi
+      console.log(err)
       this.sendBoundUserToAppifi(props)
     })
   }
