@@ -88,16 +88,6 @@ class Model extends EventEmitter {
       cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem'))
     }
 
-    let channelHandles = new Map()
-
-    channelHandles.set(Cmd.FROM_CLOUD_TOUCH_CMD, this.handleCloudTouchReq.bind(this))
-    channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
-    channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
-
-    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
-
-    this.channel.on('Connected', this.handleChannelConnected.bind(this))
-
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
@@ -123,6 +113,16 @@ class Model extends EventEmitter {
     })
 
     if (tagName) this.appifi = new Appifi(this, tagName)
+
+    let channelHandles = new Map()
+
+    channelHandles.set(Cmd.FROM_CLOUD_TOUCH_CMD, this.handleCloudTouchReq.bind(this))
+    channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
+    channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
+
+    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
+
+    this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
   }
 
