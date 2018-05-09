@@ -239,10 +239,12 @@ class Model extends EventEmitter {
    */
   handleCloudBindReq(message) {
     if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('bindedUid')) {
+      console.log('!!!!+++++++>>>>> error 1')
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.bindedUid }
     this.account.updateUser(props, (err, data) => {
+      console.log('!!!!+++++++>>>>> error 2', err)
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
       this.sendBoundUserToAppifi(props)
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'success' }))
