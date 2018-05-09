@@ -107,7 +107,7 @@ class Model extends EventEmitter {
       set: function(x) {
         if(this._appifi) this._appifi.removeAllListeners()
         this._appifi = x
-        // this._appifi.on('Starting', this.sendAccountInfo.bind(this))
+        this._appifi.on('Started', this.handleAppifiStarted.bind(this))
         this._appifi.on('message', this.handleAppifiMessage.bind(this))
       }
     })
@@ -124,6 +124,10 @@ class Model extends EventEmitter {
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
+  }
+
+  handleAppifiStarted () {
+    if (this.account.user) this.sendBoundUserToAppifi(this.account.user)
   }
 
   sendBoundUserToAppifi(user) {
