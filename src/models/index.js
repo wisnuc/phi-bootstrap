@@ -195,9 +195,9 @@ class Model extends EventEmitter {
   handleCloudBoundUserMessage (message) {
     let data = message.data
     if (!data) return
-    if (!data.hasOwnProperty('uid')) return
+    if (!data.hasOwnProperty('binedUid')) return
     let props = {
-      phicommUserId: data.uid === '0' ? null : data.uid
+      phicommUserId: data.binedUid === '0' ? null : data.binedUid
     }
     this.account.updateUser(props, (err, data) => {
       // notify appifi
@@ -233,6 +233,7 @@ class Model extends EventEmitter {
    */
   handleCloudUnbindNotice (message) {
     let props = { phicommUserId: null }
+
   }
 
   /**
