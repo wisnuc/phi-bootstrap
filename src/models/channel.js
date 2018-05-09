@@ -170,6 +170,7 @@ class Channel extends EventEmitter {
   }
 
   handleCloudMessage(message) {
+    debug('FROM_CLOUD:', message)
     if (message.type === 'req' && this.handles.has(message.reqCmd)) 
       return this.handles.get(message.reqCmd)(message)
     if (message.type === 'pip') {
