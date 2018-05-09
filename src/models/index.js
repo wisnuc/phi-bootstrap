@@ -188,7 +188,7 @@ class Model extends EventEmitter {
   handleCloudBoundUserMessage (message) {
     let data = message.data
     if (!data) return
-    if (!data.hasOwnProperty('bindUid')) return
+    if (!data.hasOwnProperty('bindedUid')) return
     let props = {
       phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
     }
@@ -238,7 +238,7 @@ class Model extends EventEmitter {
    * }
    */
   handleCloudBindReq(message) {
-    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty(bindedUid)) {
+    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('bindedUid')) {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.bindedUid }
