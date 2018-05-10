@@ -40,7 +40,7 @@ class Model extends EventEmitter {
 
   /**
   Create the model
-  @param {string} root - deployment root directory, such as '/wisnuc'
+  @param {string} root - deployment root directory, such as '/phi'
   @param {string} githubUrl - the gihub release api url 
   @param {string} appBalls - local tarballs, with local (manifest), path, and config (package.json) in future.
   @param {boolean} betaOn - whether use beta, true for betaOn
@@ -303,7 +303,7 @@ class Model extends EventEmitter {
   }
 
   nodePath () {
-    return this.globalNode ? 'node' : '/wisnuc/node/base/bin/node'
+    return this.globalNode ? 'node' : '/phi/node/base/bin/node'
   }
 
   sort () {

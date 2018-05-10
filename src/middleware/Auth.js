@@ -1,5 +1,5 @@
 const passport = require('passport')
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const BasicStrategy = require('passport-http').BasicStrategy
 const JwtStrategy = require('passport-jwt').Strategy
 const ExtractJwt = require('passport-jwt').ExtractJwt

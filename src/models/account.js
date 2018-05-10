@@ -1,6 +1,7 @@
 const EventEmitter = require('events')
 const path = require('path')
 const fs = require('fs')
+const bcrypt = require('bcryptjs')
 const UUID = require('uuid')
 
 const DataStore = require('../lib/DataStore')
