@@ -3,15 +3,15 @@ const fs = require('fs')
 const path = require('path')
 
 const options = {
-  key: fs.readFileSync(path.join(__dirname,'../../testdata/server-key.pem')),
-  cert: fs.readFileSync(path.join(__dirname,'../../testdata/server-cert.pem')),
+  key: fs.readFileSync(path.join(process.cwd(), '/testdata/server-key.pem')),
+  cert: fs.readFileSync(path.join(process.cwd(),'/testdata/server-cert.pem')),
 
   // This is necessary only if using the client certificate authentication.
   requestCert: true,
   // This option only has an effect when requestCert is true and defaults to true.
   // rejectUnauthorized: true,
 
-  ca: [ fs.readFileSync(path.join(__dirname,'../../testdata/ca-cert.pem')) ]
+  ca: [ fs.readFileSync(path.join(process.cwd(),'/testdata/ca-cert.pem')) ]
 }
 
 let client = null

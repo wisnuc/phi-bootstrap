@@ -8,6 +8,7 @@ const mkdirpAsync = Promise.promisify(mkdirp)
 const rimraf = require('rimraf')
 const rimrafAsync = Promise.promisify(rimraf)
 const UUID = require('uuid')
+const debug = require('debug')('bootstrap:model')
 
 const { untar } = require('../lib/tarball')
 const { probeAppBalls } = require('../lib/appball')
@@ -134,17 +135,17 @@ class Model extends EventEmitter {
 
   sendBoundUserToAppifi(user) {
     // let user = u ? u : this.account.user ? this.account.user : null
-    console.log('sendBoundUserToAppifi: ', user)
+    debug('sendBoundUserToAppifi: ', user)
     if (this.appifi) this.appifi.sendMessage({ type:Cmd.TO_APPIFI_BOUND_USER_CMD, data:user.phicommUserId ? user : null })
   }
 
   handleCloudTouchReq (message) {
-    console.log('handleCloudTouchReq')
+    debug('handleCloudTouchReq')
     let msgId = message.msgId
     this.device.requestAuth(30 * 1000, (err, isAuth) => {
-      console.log('TouchEnd', err, isAuth)
+      debug('TouchEnd', err, isAuth)
       let status = isAuth ? 'ok' : 'timeout' 
-      if(err) console.log('Touch Error: ', err)
+      if(err) debug('Touch Error: ', err)
       return this.channel.send(this.channel.createAckMessage(msgId, { status }))
     })
   }
@@ -170,11 +171,9 @@ class Model extends EventEmitter {
     })
     this.channel.send(connectBody, message => {
       // message inclouds boundUserInfo
-      console.log('***** ConnectReq Resp******\n', message)
       this.handleCloudBoundUserMessage(message)
       this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_GET_TOKEN_CMD, {}), message => {
         // message inclouds Token
-        console.log('***** GetToken Resp******\n', message)
         this.cloudToken = message.data.token
         if (this.appifi) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: message.data })
       })
@@ -188,13 +187,12 @@ class Model extends EventEmitter {
    *    type: 'ack'
    *    msgId: 'xxx'
    *    data: {
-   *       uid: "" //　设备绑定用户phicomm uid, 未绑定时值为０
+   *       uid: "" //　设备绑定用户phicomm bindedUid, 未绑定时值为０
    *    }
    * } 
    */
   handleCloudBoundUserMessage (message) {
     let data = message.data
-    console.log('**************', data)
     if (!data) return
     if (!data.hasOwnProperty('bindedUid')) return
     let props = {
@@ -202,7 +200,7 @@ class Model extends EventEmitter {
     }
     this.account.updateUser(props, (err, data) => {
       // notify appifi
-      console.log(err)
+      debug('update user error: ', err)
       this.sendBoundUserToAppifi(props)
     })
   }
@@ -211,18 +209,23 @@ class Model extends EventEmitter {
     
   }
 
+  /**
+   * handle appifi message
+   * @param {*} message 
+   */
   handleAppifiMessage(message) {
+    debug('***FROM_APPIFI_MESSAGE:', message)
     let obj
     try {
       obj = JSON.parse(message)
-    } catch (e) { return console.log(e)}
+    } catch (e) { return debug(e)}
     if (obj.type === Cmd.FROM_APPIFI_USERS_CMD) {
       if (Array.isArray(obj.users))
         return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
           userList: obj.users,
           deviceSN: '1plp0panrup3jqphe'
         }))
-      else return console.log('invild users', obj)
+      else return debug('invaild users', obj)
     }
   }
 
@@ -235,7 +238,12 @@ class Model extends EventEmitter {
    */
   handleCloudUnbindNotice (message) {
     let props = { phicommUserId: null }
-
+    this.account.updateUser(props, (err, data) => {
+      if (err) return debug('*****unbind error*****', err)
+      this.appStop(() => {
+        this.appStart(() => {})
+      })
+    })
   }
 
   /**

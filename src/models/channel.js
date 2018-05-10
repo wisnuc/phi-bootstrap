@@ -204,28 +204,6 @@ class Channel extends EventEmitter {
 
   }
 
-  reqConnectBody () {
-    let interfaces = os.networkInterfaces()
-    
-    let keys = Object.keys(interfaces).filter(k => !!k && k !== 'lo')
-    if (!keys.length) throw new Error('mac addr not found')
-
-    let key = keys.find(k => Array.isArray(interfaces[k]) && interfaces[k].length)
-    if (!key) throw new Error('network interface error')
-
-    let mac = interfaces[key][0].mac
-    console.log('*****report mac*****', mac)
-    return this.createReqMessage('connect', {
-      deviceModel: 'PhiNAS2',
-      deviceSN: '1plp0panrup3jqphe',
-      MAC: mac,
-      swVer: 'v1.0.0',
-      hwVer: 'v1.0.0'
-    })
-  }
-
-
-
   createReqMessage (reqCmd, data) {
     return {
       type: 'req',
