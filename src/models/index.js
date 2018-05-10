@@ -29,7 +29,8 @@ const Config = require('../lib/config')
 const Cmd = Config.cmd
 const ServerConf =  Config.server
 
-const getMac = require('../lib/net').getMac
+const getNetInfo = require('../lib/net').getNetInfo
+const deviceInfo = require('../lib/device')()
 
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
 const EApp404 = Object.assign(new Error('app not installed'), { code: 'ENOTFOUND', status: 404 })
@@ -74,21 +75,9 @@ class Model extends EventEmitter {
       this.reqSchedule()      
     })
 
-/**
-142 chroot ${TARGET} /bin/bash -c "apt -y install sudo initramfs-tools openssh-server parted vim-common tzdata net-tools iputils-ping"
-143 chroot ${TARGET} /bin/bash -c "apt -y install avahi-daemon avahi-utils btrfs-tools udisks2"
-144 chroot ${TARGET} /bin/bash -c "apt -y install libimage-exiftool-perl imagemagick ffmpeg"
-145 chroot ${TARGET} /bin/bash -c "apt -y install samba rsyslog minidlna"
-**/
-
     let names = ['libimage-exiftool-perl', 'imagemagick', 'ffmpeg']
     this.deb = new Deb(names)
-    //ca: [ fs.readFileSync(path.join(process.cwd(), 'testdata/ca-cert.pem')) ]
-    let options = {
-      key: fs.readFileSync(path.join(process.cwd(), 'testdata/clientkey.pem')),
-      cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem'))
-    }
-
+    
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
@@ -121,6 +110,8 @@ class Model extends EventEmitter {
     channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
     channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
 
+    let options = deviceInfo.deviceSecret
+
     this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
@@ -131,6 +122,10 @@ class Model extends EventEmitter {
   handleAppifiStarted () {
     if (this.account.user) this.sendBoundUserToAppifi(this.account.user)
     if (this.cloudToken) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: { token: this.cloudToken } })
+    this.appifi.sendMessage({ type:Cmd.TO_APPIFI_DEVICE_CMD, data: {
+      deviceSN: deviceInfo.deviceSN,
+      deviceModel: deviceInfo.deviceModel
+    }})
   }
 
   sendBoundUserToAppifi(user) {
@@ -160,12 +155,13 @@ class Model extends EventEmitter {
    */
   handleChannelConnected () {
     // create connect message
-    let mac = getMac()
-    if (!mac) throw new Error('mac not found')
+    let netInfo = getNetInfo()
+    if (!netInfo) throw new Error('mac not found')
     let connectBody = this.channel.createReqMessage(Cmd.TO_CLOUD_CONNECT_CMD, {
-      deviceModel: 'PhiNAS2',
-      deviceSN: '1plp0panrup3jqphe',
-      MAC: mac,
+      deviceModel: deviceInfo.deviceModel,
+      deviceSN: deviceInfo.deviceSN,
+      MAC: netInfo.mac,
+      localIp: netInfo.address,
       swVer: 'v1.0.0',
       hwVer: 'v1.0.0'
     })
@@ -223,7 +219,7 @@ class Model extends EventEmitter {
       if (Array.isArray(obj.users))
         return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
           userList: obj.users,
-          deviceSN: '1plp0panrup3jqphe'
+          deviceSN: deviceInfo.deviceSN
         }))
       else return debug('invaild users', obj)
     }
