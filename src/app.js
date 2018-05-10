@@ -38,7 +38,7 @@ const createApp1 = (err, model) => {
   let opts = {
     auth: auth.middleware,
     setttings: { json: { spaces: 2 } },
-    log: { skip: 'no', error: 'all' },
+    log: { skip: 'selected' },
     routers: []
   }
 
