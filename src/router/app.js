@@ -1,4 +1,5 @@
 const express = require('express')
+const deviceInfo = require('../lib/device')()
 
 const html = `
 <html>
@@ -64,7 +65,8 @@ module.exports = (auth, model) => {
 
   router.get('/station/info', (req, res, next) => {
     res.status(200).json({
-      state: model.channel.getState()
+      deviceSN: deviceInfo.deviceSN,
+      deviceModel: deviceInfo.deviceModel
     })
   })
 

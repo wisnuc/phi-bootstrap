@@ -29,7 +29,6 @@ const Config = require('../lib/config')
 const Cmd = Config.cmd
 const ServerConf =  Config.server
 
-const getNetInfo = require('../lib/net').getNetInfo
 const deviceInfo = require('../lib/device')()
 
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
@@ -121,11 +120,16 @@ class Model extends EventEmitter {
 
   handleAppifiStarted () {
     if (this.account.user) this.sendBoundUserToAppifi(this.account.user)
-    if (this.cloudToken) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: { token: this.cloudToken } })
-    this.appifi.sendMessage({ type:Cmd.TO_APPIFI_DEVICE_CMD, data: {
-      deviceSN: deviceInfo.deviceSN,
-      deviceModel: deviceInfo.deviceModel
-    }})
+    if (this.cloudToken) this.appifi.sendMessage({ 
+      type: Cmd.TO_APPIFI_TOKEN_CMD,
+      data: {
+        token: this.cloudToken 
+      } 
+    })
+    this.appifi.sendMessage({ 
+      type:Cmd.TO_APPIFI_DEVICE_CMD,
+      data: Object.assign({}, deviceInfo, { deviceSecret: undefined})
+    })
   }
 
   sendBoundUserToAppifi(user) {
@@ -155,15 +159,13 @@ class Model extends EventEmitter {
    */
   handleChannelConnected () {
     // create connect message
-    let netInfo = getNetInfo()
-    if (!netInfo) throw new Error('mac not found')
     let connectBody = this.channel.createReqMessage(Cmd.TO_CLOUD_CONNECT_CMD, {
       deviceModel: deviceInfo.deviceModel,
       deviceSN: deviceInfo.deviceSN,
-      MAC: netInfo.mac,
-      localIp: netInfo.address,
-      swVer: 'v1.0.0',
-      hwVer: 'v1.0.0'
+      MAC: deviceInfo.net.mac,
+      localIp: deviceInfo.net.address,
+      swVer: deviceInfo.softwareVersion,
+      hwVer: deviceInfo.hardwareVersion
     })
     this.channel.send(connectBody, message => {
       // message inclouds boundUserInfo
