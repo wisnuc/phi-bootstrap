@@ -29,7 +29,7 @@ const rootarg = process.argv
     return false
   })
 
-const root = (rootarg && path.resolve(rootarg)) || '/wisnuc'
+const root = (rootarg && path.resolve(rootarg)) || '/phi'
 
 console.log(`root is ${root}`)
 
