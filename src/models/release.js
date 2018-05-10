@@ -232,7 +232,7 @@ class Verifying extends State {
 
 
 /**
-{ path: '/home/wisnuc/appifi-bootstrap/tmptest/appifi-0.9.14-8501308-c8ffd8ab-rel.tar.gz',
+{ path: '/home/phi/appifi-bootstrap/tmptest/appifi-0.9.14-8501308-c8ffd8ab-rel.tar.gz',
   local: 
    { url: 'https://api.github.com/repos/wisnuc/appifi-release/releases/8501308',
      assets_url: 'https://api.github.com/repos/wisnuc/appifi-release/releases/8501308/assets',

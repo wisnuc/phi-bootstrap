@@ -29,7 +29,7 @@ const rootarg = process.argv
     return false
   })
 
-const root = (rootarg && path.resolve(rootarg)) || '/wisnuc'
+const root = (rootarg && path.resolve(rootarg)) || '/phi'
 
 console.log(`root is ${root}`)
 
@@ -74,14 +74,14 @@ init(root, githubUrl, (err, model) => {
       console.log('Bootstrap started')
     }
 
-    // hostname(err => {
-    //   // do it anyway, for sometimes avahi-set-host-name failed for 'redundant'
-    //   let broadcast = child.spawn('avahi-publish-service' ,['Wisnuc Appifi Boostrap', '_http._tcp' , '3001'])
-    //   broadcast.on('error', err => console.log('broadcast error', err))
-    //   broadcast.on('close', (code, signal) => {
-    //     console.log(`broadcast exit with code ${code} and signal ${signal}, no retry, please restart service`)
-    //   })
-    // })
+    hostname(err => {
+      // do it anyway, for sometimes avahi-set-host-name failed for 'redundant'
+      let broadcast = child.spawn('avahi-publish-service' ,['Wisnuc Appifi Boostrap', '_http._tcp' , '3001'])
+      broadcast.on('error', err => console.log('broadcast error', err))
+      broadcast.on('close', (code, signal) => {
+        console.log(`broadcast exit with code ${code} and signal ${signal}, no retry, please restart service`)
+      })
+    })
   }) 
 
 })

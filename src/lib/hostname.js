@@ -27,7 +27,7 @@ const hostname = callback => {
   sysid((err, id) => {
     let hostname
     if (err)
-      hostname = `wisnuc-tmp-${UUID.v4()}`
+      hostname = `phi-tmp-${UUID.v4()}`
     else {
 
       let { model, serial, uuid } = id
@@ -35,11 +35,11 @@ const hostname = callback => {
       if (uuid) uuid = sanitize(uuid)
 
       if (typeof serial === 'string' && serial.length >= 8)
-        hostname = `wisnuc-${model}-${serial}`
+        hostname = `phi-${model}-${serial}`
       else if (typeof uuid === 'string' && uuid.length >= 8)
-        hostname = `wisnuc-${model}-${uuid.slice(0, 8)}`
+        hostname = `phi-${model}-${uuid.slice(0, 8)}`
       else
-        hostname = `wisnuc-tmp-${sanitize(UUID.v4()).slice(0, 8)}`
+        hostname = `phi-tmp-${sanitize(UUID.v4()).slice(0, 8)}`
     }
 
     child.exec(`avahi-set-host-name ${hostname}`, (err, stdout, stderr) => {

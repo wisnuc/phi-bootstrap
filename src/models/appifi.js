@@ -74,7 +74,7 @@ class Starting extends State {
       node must be in path, for there is no global node in future
       */
       env: Object.assign({}, process.env, { 
-        PATH: `/wisnuc/node/base/bin:${process.env.PATH}`,
+        PATH: `/phi/node/base/bin:${process.env.PATH}`,
         NODE_ENV: 'production' 
       }),
       stdio: ['ignore', 'inherit', 'inherit', 'ipc'] 

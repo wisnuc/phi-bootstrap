@@ -8,6 +8,7 @@ const mkdirpAsync = Promise.promisify(mkdirp)
 const rimraf = require('rimraf')
 const rimrafAsync = Promise.promisify(rimraf)
 const UUID = require('uuid')
+const debug = require('debug')('bootstrap:model')
 
 const { untar } = require('../lib/tarball')
 const { probeAppBalls } = require('../lib/appball')
@@ -28,7 +29,8 @@ const Config = require('../lib/config')
 const Cmd = Config.cmd
 const ServerConf =  Config.server
 
-const getMac = require('../lib/net').getMac
+const getNetInfo = require('../lib/net').getNetInfo
+const deviceInfo = require('../lib/device')()
 
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
 const EApp404 = Object.assign(new Error('app not installed'), { code: 'ENOTFOUND', status: 404 })
@@ -39,7 +41,7 @@ class Model extends EventEmitter {
 
   /**
   Create the model
-  @param {string} root - deployment root directory, such as '/wisnuc'
+  @param {string} root - deployment root directory, such as '/phi'
   @param {string} githubUrl - the gihub release api url 
   @param {string} appBalls - local tarballs, with local (manifest), path, and config (package.json) in future.
   @param {boolean} betaOn - whether use beta, true for betaOn
@@ -73,21 +75,9 @@ class Model extends EventEmitter {
       this.reqSchedule()      
     })
 
-/**
-142 chroot ${TARGET} /bin/bash -c "apt -y install sudo initramfs-tools openssh-server parted vim-common tzdata net-tools iputils-ping"
-143 chroot ${TARGET} /bin/bash -c "apt -y install avahi-daemon avahi-utils btrfs-tools udisks2"
-144 chroot ${TARGET} /bin/bash -c "apt -y install libimage-exiftool-perl imagemagick ffmpeg"
-145 chroot ${TARGET} /bin/bash -c "apt -y install samba rsyslog minidlna"
-**/
-
     let names = ['libimage-exiftool-perl', 'imagemagick', 'ffmpeg']
     this.deb = new Deb(names)
-    //ca: [ fs.readFileSync(path.join(process.cwd(), 'testdata/ca-cert.pem')) ]
-    let options = {
-      key: fs.readFileSync(path.join(process.cwd(), 'testdata/clientkey.pem')),
-      cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem'))
-    }
-
+    
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
@@ -120,29 +110,37 @@ class Model extends EventEmitter {
     channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
     channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
 
+    let options = deviceInfo.deviceSecret
+
     this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
+    this.cloudToken = undefined
   }
 
   handleAppifiStarted () {
     if (this.account.user) this.sendBoundUserToAppifi(this.account.user)
+    if (this.cloudToken) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: { token: this.cloudToken } })
+    this.appifi.sendMessage({ type:Cmd.TO_APPIFI_DEVICE_CMD, data: {
+      deviceSN: deviceInfo.deviceSN,
+      deviceModel: deviceInfo.deviceModel
+    }})
   }
 
   sendBoundUserToAppifi(user) {
     // let user = u ? u : this.account.user ? this.account.user : null
-    console.log('sendBoundUserToAppifi: ', user)
+    debug('sendBoundUserToAppifi: ', user)
     if (this.appifi) this.appifi.sendMessage({ type:Cmd.TO_APPIFI_BOUND_USER_CMD, data:user.phicommUserId ? user : null })
   }
 
   handleCloudTouchReq (message) {
-    console.log('handleCloudTouchReq')
+    debug('handleCloudTouchReq')
     let msgId = message.msgId
     this.device.requestAuth(30 * 1000, (err, isAuth) => {
-      console.log('TouchEnd', err, isAuth)
+      debug('TouchEnd', err, isAuth)
       let status = isAuth ? 'ok' : 'timeout' 
-      if(err) console.log('Touch Error: ', err)
+      if(err) debug('Touch Error: ', err)
       return this.channel.send(this.channel.createAckMessage(msgId, { status }))
     })
   }
@@ -157,22 +155,22 @@ class Model extends EventEmitter {
    */
   handleChannelConnected () {
     // create connect message
-    let mac = getMac()
-    if (!mac) throw new Error('mac not found')
+    let netInfo = getNetInfo()
+    if (!netInfo) throw new Error('mac not found')
     let connectBody = this.channel.createReqMessage(Cmd.TO_CLOUD_CONNECT_CMD, {
-      deviceModel: 'PhiNAS2',
-      deviceSN: '1plp0panrup3jqphe',
-      MAC: mac,
+      deviceModel: deviceInfo.deviceModel,
+      deviceSN: deviceInfo.deviceSN,
+      MAC: netInfo.mac,
+      localIp: netInfo.address,
       swVer: 'v1.0.0',
       hwVer: 'v1.0.0'
     })
     this.channel.send(connectBody, message => {
       // message inclouds boundUserInfo
-      console.log('***** ConnectReq Resp******\n', message)
       this.handleCloudBoundUserMessage(message)
       this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_GET_TOKEN_CMD, {}), message => {
         // message inclouds Token
-        console.log('***** GetToken Resp******\n', message)
+        this.cloudToken = message.data.token
         if (this.appifi) this.appifi.sendMessage({ type: Cmd.TO_APPIFI_TOKEN_CMD, data: message.data })
       })
     })
@@ -185,19 +183,20 @@ class Model extends EventEmitter {
    *    type: 'ack'
    *    msgId: 'xxx'
    *    data: {
-   *       uid: "" //　设备绑定用户phicomm uid, 未绑定时值为０
+   *       uid: "" //　设备绑定用户phicomm bindedUid, 未绑定时值为０
    *    }
    * } 
    */
   handleCloudBoundUserMessage (message) {
     let data = message.data
     if (!data) return
-    if (!data.hasOwnProperty('uid')) return
+    if (!data.hasOwnProperty('bindedUid')) return
     let props = {
-      phicommUserId: data.uid === '0' ? null : data.uid
+      phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
     }
     this.account.updateUser(props, (err, data) => {
       // notify appifi
+      debug('update user error: ', err)
       this.sendBoundUserToAppifi(props)
     })
   }
@@ -206,18 +205,23 @@ class Model extends EventEmitter {
     
   }
 
+  /**
+   * handle appifi message
+   * @param {*} message 
+   */
   handleAppifiMessage(message) {
+    debug('***FROM_APPIFI_MESSAGE:', message)
     let obj
     try {
       obj = JSON.parse(message)
-    } catch (e) { return console.log(e)}
+    } catch (e) { return debug(e)}
     if (obj.type === Cmd.FROM_APPIFI_USERS_CMD) {
       if (Array.isArray(obj.users))
         return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
           userList: obj.users,
-          deviceSN: '1plp0panrup3jqphe'
+          deviceSN: deviceInfo.deviceSN
         }))
-      else return console.log('invild users', obj)
+      else return debug('invaild users', obj)
     }
   }
 
@@ -230,6 +234,12 @@ class Model extends EventEmitter {
    */
   handleCloudUnbindNotice (message) {
     let props = { phicommUserId: null }
+    this.account.updateUser(props, (err, data) => {
+      if (err) return debug('*****unbind error*****', err)
+      this.appStop(() => {
+        this.appStart(() => {})
+      })
+    })
   }
 
   /**
@@ -289,7 +299,7 @@ class Model extends EventEmitter {
   }
 
   nodePath () {
-    return this.globalNode ? 'node' : '/wisnuc/node/base/bin/node'
+    return this.globalNode ? 'node' : '/phi/node/base/bin/node'
   }
 
   sort () {

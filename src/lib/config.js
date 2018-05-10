@@ -10,6 +10,7 @@ module.exports = {
     FROM_APPIFI_USERS_CMD: 'appifi_users',
     FROM_APPIFI_TOUCH_CMD: 'appifi_touch',
     TO_APPIFI_TOKEN_CMD: 'bootstrap_token',
+    TO_APPIFI_DEVICE_CMD: 'bootstrap_device',
     TO_APPIFI_BOUND_USER_CMD: 'bootstrap_boundUser'
   },
   server: {

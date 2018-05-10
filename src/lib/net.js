@@ -1,6 +1,6 @@
 const os = require('os')
 
-module.exports.getMac = () => {
+module.exports.getNetInfo = () => {
   let interfaces = os.networkInterfaces()
     
   let keys = Object.keys(interfaces).filter(k => !!k && k !== 'lo')
@@ -8,6 +8,6 @@ module.exports.getMac = () => {
 
   let key = keys.find(k => Array.isArray(interfaces[k]) && interfaces[k].length)
   if (!key) return
-  let mac = interfaces[key][0].mac
-  return mac
+  let ipv4 = interfaces[key].find(x => x.family === 'IPv4')
+  return ipv4
 }
