@@ -4,45 +4,92 @@ set -e
 
 echo "set to development mode"
 
-echo "clean tmptest"
-rm -rf tmptest
+phiFolder=`pwd`
 
-mkdir tmptest
+tmpFolder="$phiFolder/tmptest"
 
-echo "make fake release version"
+tarballsFolder="$tmpFolder/appifi-tarballs"
 
-cp -r testdata/appifi tmptest/appifi
+appifiFolder="$tmpFolder/appifi"
 
-rm -r tmptest/appifi/build
+archiveFolder="$appifiFolder/old_appifi"
 
-mkdir tmptest/appifi-tarballs
+echo $phiFolder
+echo $appifiFolder
 
-cp -r testdata/appifi-1.0.14-10097392-0d5890cc.tar.gz tmptest/appifi-tarballs
+cleanAndConfEnv()
+{
+    echo "clean tmptest"
 
-cd tmptest/appifi/
+    rm -rf $tmpFolder
 
-git clone https://github.com/wisnuc/appifi build1  
+    mkdir $tmpFolder
 
-cd build1
+    echo "make fake tarball"
 
-git checkout phi
+    mkdir $tarballsFolder
 
-cd ../ && mkdir build
+    cp -r testdata/appifi-1.0.14-10097392-0d5890cc.tar.gz $tarballsFolder
+}
 
-cp -r build1/src/* build/
+makeAppifi()
+{
+    echo "make fake release version"
 
-cp build1/package.json build/
+    cp -r testdata/appifi $tmpFolder
 
-rm -r build1
+    cd $appifiFolder
 
-cd build
+    rm -r "$appifiFolder/build"
 
-sudo npm install
+    git clone https://github.com/wisnuc/appifi old_appifi
 
-apt-get update
+    cd old_appifi
 
-echo "Install avahi"
-apt-get -y install avahi-daemon avahi-utils
+    git checkout phi
 
-echo "Install essential packages for whole system"
-apt-get -y install build-essential python-minimal openssh-server btrfs-tools imagemagick ffmpeg samba udisks2 curl
+    cd ../ && mkdir build
+
+    cp -r old_appifi/src/* build/
+
+    cp old_appifi/package.json build/
+
+    cd build
+
+    sudo npm install
+
+    apt-get update
+
+    echo "Install avahi"
+    apt-get -y install avahi-daemon avahi-utils
+
+    echo "Install essential packages for whole system"
+    apt-get -y install build-essential python-minimal openssh-server btrfs-tools imagemagick ffmpeg samba udisks2 curl
+
+}
+
+updateAppifi()
+{
+  echo "update appifi"
+  cd $archiveFolder
+  git checkout phi
+  git pull
+
+  rm -rf "$appifiFolder/build"
+  mkdir "$appifiFolder/build"
+
+  cp -r "$archiveFolder/src/"* "$appifiFolder/build/"
+  cp "$archiveFolder/package.json" "$appifiFolder/build/"
+
+  cd "$appifiFolder/build"
+  sudo npm i
+}
+
+
+
+if [ ! -d $archiveFolder ]; then
+cleanAndConfEnv
+makeAppifi
+else
+updateAppifi
+fi
