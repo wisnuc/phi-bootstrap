@@ -12,10 +12,11 @@ const deviceSN = () => {
   return '1plp0panrup3jqphe'
 }
 
-//ca: [ fs.readFileSync(path.join(process.cwd(), 'testdata/ca-cert.pem')) ]
+//
 // let options = {
 //   key: fs.readFileSync(path.join(process.cwd(), 'testdata/clientkey.pem')),
-//   cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem'))
+//   cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem')),
+//   ca: [ fs.readFileSync(path.join(process.cwd(), 'testdata/ca-cert.pem')) ]
 // }
 
 const deviceSecret = () => {

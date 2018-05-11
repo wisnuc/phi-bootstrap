@@ -6,7 +6,7 @@ const cwd = process.cwd()
 const tmptest = path.join(cwd, 'tmptest') 
 const Model = require('../../src/models')
 
-const powerPath = path.join(tmptest, 'power')
+const powerPath = path.join('/phi/power')
 const userPath = path.join(tmptest, 'user.json')
 
 const rimraf = require('rimraf')
@@ -56,6 +56,8 @@ let fakeCloud, model
 describe(path.basename(__filename), () => {
 
   beforeEach(() => {
+    rimraf.sync('/phi')
+    mkdirp.sync('/phi')
     rimraf.sync(powerPath)
     rimraf.sync(path.join(tmptest, 'user.json'))
     fs.writeFileSync(powerPath)
@@ -126,7 +128,7 @@ describe(path.basename(__filename), () => {
           setTimeout(() => {
             expect(model.device.ledState.currentState()).to.equal('LedAuth')
           }, 1000)
-          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 1000)
+          setTimeout( () => child.execSync(`echo 1 > ${ powerPath }`), 1000)
         } else {
           console.log('client not found')
           done(new Error('client not found'))
@@ -162,7 +164,7 @@ describe(path.basename(__filename), () => {
           setTimeout(() => {
             expect(model.device.ledState.currentState()).to.equal('LedAuth')
           }, 1000)
-          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 1000)
+          setTimeout( () => child.execSync(`echo 1 > ${ powerPath }`), 1000)
         } else {
           console.log('client not found')
           done(new Error('client not found'))
@@ -207,7 +209,7 @@ describe(path.basename(__filename), () => {
           setTimeout(() => {
             expect(model.device.ledState.currentState()).to.equal('LedAuth')
           }, 1000)
-          setTimeout( () => child.execSync(`echo 1 > ${ path.join(tmptest, 'power') }`), 1000)
+          setTimeout( () => child.execSync(`echo 1 > ${ powerPath }`), 1000)
         } else {
           console.log('client not found')
           done(new Error('client not found'))
