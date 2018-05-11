@@ -194,11 +194,12 @@ class Model extends EventEmitter {
     if (!data) return
     if (!data.hasOwnProperty('bindedUid')) return
     let props = {
-      phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
+      phicommUserId: data.bindedUid
     }
-    this.account.updateUser(props, (err, data) => {
+    this.account.updateUser(props, (err, d) => {
       // notify appifi
-      debug('update user error: ', err)
+      debug('update user error: ', err, d)
+      if (data.bindedUid === '0') props.phicommUserId = null
       this.sendBoundUserToAppifi(props)
     })
   }
@@ -235,7 +236,7 @@ class Model extends EventEmitter {
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
-    let props = { phicommUserId: null }
+    let props = { phicommUserId: '0' }
     this.account.updateUser(props, (err, data) => {
       if (err) return debug('*****unbind error*****', err)
       this.appStop(() => {
