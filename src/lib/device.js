@@ -9,7 +9,7 @@ const os = require('os')
 **/
 
 const deviceSN = () => {
-  return '1plp0panrup3jqphe'
+  return 'wjagqq9nq6npzw837'
 }
 
 //
@@ -21,8 +21,8 @@ const deviceSN = () => {
 
 const deviceSecret = () => {
   let secret = {
-    key: fs.readFileSync(path.join(process.cwd(), 'testdata/clientkey.pem')),
-    cert: fs.readFileSync(path.join(process.cwd(), 'testdata/clientcert.pem'))
+    key: fs.readFileSync(path.join(process.cwd(), `testdata/phi-ssl/${ deviceSN() }-key.pem`)),
+    cert: fs.readFileSync(path.join(process.cwd(), `testdata/phi-ssl/${ deviceSN() }-cert.pem`))
   }
   return secret
 }
