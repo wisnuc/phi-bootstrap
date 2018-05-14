@@ -113,11 +113,12 @@ class Connected extends State {
 
   enter(socket) {
     super.enter()
-    this.messageBuf = Buffer.from('')
+    this.messageSep = Buffer.from('\n')
+    this.messageBuf = null
     this.socket = socket
     this.socket.removeAllListeners()  // remove first
     this.socket.on('data', data => {
-      // console.log('Cloud Message ===> ', data)
+      // Buffer.from(data).indexOf(this.messageSep)
       let message 
       try {
         message = JSON.parse(data)

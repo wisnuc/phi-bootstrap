@@ -3,6 +3,7 @@ const path = require('path')
 const fs = Promise.promisifyAll(require('fs'))
 const EventEmitter = require('events')
 
+const bcrypt = require('bcryptjs')
 const mkdirp = require('mkdirp')
 const mkdirpAsync = Promise.promisify(mkdirp)
 const rimraf = require('rimraf')
@@ -262,6 +263,7 @@ class Model extends EventEmitter {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.uid }
+    props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
     this.account.updateUser(props, (err, data) => {
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
       this.sendBoundUserToAppifi(props)
