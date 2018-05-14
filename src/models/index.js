@@ -111,8 +111,11 @@ class Model extends EventEmitter {
     channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
 
     let options = deviceInfo.deviceSecret
+    
+    let noticeHandles = new Map()
+    noticeHandles.set(Cmd.FROM_CLOUD_UNBIND_NOTICE, this.handleCloudUnbindNotice.bind(this))
 
-    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
+    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles, noticeHandles)
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
@@ -199,7 +202,7 @@ class Model extends EventEmitter {
     }
     this.account.updateUser(props, (err, d) => {
       // notify appifi
-      debug('update user error: ', err, d)
+      if (err) debug('update user error: ', err)
       if (data.bindedUid === '0') props.phicommUserId = null
       this.sendBoundUserToAppifi(props)
     })
@@ -237,9 +240,13 @@ class Model extends EventEmitter {
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
+    if (!message.data || !message.data.uid || !message.deviceSN) return debug("Error Unbind Message", message)
+    if (message.data.uid !== this.account.user.phicommUserId) return debug('Error Unbind: uid mismatch')
+    if (message.data.deviceSN !== deviceInfo.deviceSN) return debug('Error Unbind: deviceSn mismatch')
     let props = { phicommUserId: '0' }
     this.account.updateUser(props, (err, data) => {
-      if (err) return debug('*****unbind error*****', err)
+      if (err) debug('*****unbind error*****', err)
+      // just do it
       this.appStop(() => {
         this.appStart(() => {})
       })
@@ -263,6 +270,7 @@ class Model extends EventEmitter {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.uid }
+    // set default password 
     props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
     this.account.updateUser(props, (err, data) => {
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))

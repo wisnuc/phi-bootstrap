@@ -159,28 +159,31 @@ class Connected extends State {
  */
 class Channel extends EventEmitter {
 
-  constructor (ctx, addr, port, opts, handles) {
+  constructor (ctx, addr, port, opts, reqHandles, noticeHandles, pipHandles) {
     super()
     this.ctx = ctx
     this.opts = opts
-    this.handles = handles instanceof Map ? handles : new Map()
     this.port = port
     this.addr = addr
+
+    this.reqHandles = reqHandles instanceof Map ? reqHandles : new Map()
+    this.noticeHandles = noticeHandles instanceof Map ? noticeHandles : new Map()
+    this.pipHandles = pipHandles instanceof Map ? pipHandles : new Map()
     this.msgQueue = new Map()
     new Connecting(this)    
   }
 
   handleCloudMessage(message) {
     debug('FROM_CLOUD:', message)
-    if (message.type === 'req' && this.handles.has(message.reqCmd)) 
-      return this.handles.get(message.reqCmd)(message)
+    if (message.type === 'req' && this.reqHandles.has(message.reqCmd)) 
+      return this.reqHandles.get(message.reqCmd)(message)
     if (message.type === 'pip') {
       // if (!this.isAppifiAvaliable) {} // return error
       if (this.isAppifiAvaliable()) {
         debug('send pip message to appifi', message)
         return this.ctx.appifi.sendMessage(message)
       }
-      return console.log('appifi not avaliable', message)
+      return debug('appifi not avaliable', message)
     }
     if (message.type === 'ack') {
       if (this.msgQueue.has(message.msgId)) {
@@ -188,9 +191,14 @@ class Channel extends EventEmitter {
         this.msgQueue.delete(message.msgId) // remove handle
         return handle(message)
       }
-      else return console.log('unhandle ack message: ',message)
+      else return debug('Unhandle ack message: ',message)
     }
-    console.log('****Miss Channdle Message****', message)
+    if (message.type === 'notice') {
+      if (this.noticeHandles.has(message.noticeType)) 
+        return this.noticeHandles.get(message.noticeType)(message)
+      return debug('Unhandle notice message: ', message)
+    }
+    debug('****Miss Channdle Message****', message)
   }
 
   isAppifiAvaliable() {
