@@ -8,9 +8,23 @@ const os = require('os')
 145 chroot ${TARGET} /bin/bash -c "apt -y install samba rsyslog minidlna"
 **/
 
-const deviceSN = () => {
-  return 'wjagqq9nq6npzw837'
-}
+const _device = (() => {
+  let sn, key, cert
+  try {
+    sn = fs.readFileSync('/phi/ssl/deviceSN').toString('utf8')
+    key = fs.readFileSync('/phi/ssl/key.pem').toString('utf8')
+    cert = fs.readFileSync('/phi/ssl/cert.pem').toString('utf8')
+    return { sn, key, cert }
+  } catch (e) {
+    return {
+      sn: 'wjagqq9nq6npzw837',
+      key: 'xxx',
+      cert: 'xxx',
+    }
+  }
+})()
+
+const deviceSN = () => _device.sn
 
 //
 // let options = {
@@ -19,13 +33,7 @@ const deviceSN = () => {
 //   ca: [ fs.readFileSync(path.join(process.cwd(), 'testdata/ca-cert.pem')) ]
 // }
 
-const deviceSecret = () => {
-  let secret = {
-    key: fs.readFileSync(path.join(process.cwd(), `testdata/phi-ssl/${ deviceSN() }-key.pem`)),
-    cert: fs.readFileSync(path.join(process.cwd(), `testdata/phi-ssl/${ deviceSN() }-cert.pem`))
-  }
-  return secret
-}
+const deviceSecret = () => ({ key: _device.key, cert: _device.cert })
 
 const deviceModel = () => {
   return 'PhiNAS2'
