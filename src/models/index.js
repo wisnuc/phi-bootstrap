@@ -240,7 +240,7 @@ class Model extends EventEmitter {
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
-    if (!message.data || !message.data.uid || !message.deviceSN) return debug("Error Unbind Message", message)
+    if (!message.data || !message.data.uid || !message.data.deviceSN) return debug("Error Unbind Message", message)
     if (message.data.uid !== this.account.user.phicommUserId) return debug('Error Unbind: uid mismatch')
     if (message.data.deviceSN !== deviceInfo.deviceSN) return debug('Error Unbind: deviceSn mismatch')
     let props = { phicommUserId: '0' }
