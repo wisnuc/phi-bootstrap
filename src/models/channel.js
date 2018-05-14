@@ -174,7 +174,11 @@ class Channel extends EventEmitter {
     if (message.type === 'req' && this.handles.has(message.reqCmd)) 
       return this.handles.get(message.reqCmd)(message)
     if (message.type === 'pip') {
-      if (!this.isAppifiAvaliable) {} // return error
+      // if (!this.isAppifiAvaliable) {} // return error
+      if (!this.isAppifiAvaliable()) {
+        return this.ctx.appifi.sendMessage(message)
+      }
+      return console.log('appifi not avaliable', message)
     }
     if (message.type === 'ack') {
       if (this.msgQueue.has(message.msgId)) {
