@@ -3,6 +3,7 @@ const path = require('path')
 const fs = Promise.promisifyAll(require('fs'))
 const EventEmitter = require('events')
 
+const bcrypt = require('bcryptjs')
 const mkdirp = require('mkdirp')
 const mkdirpAsync = Promise.promisify(mkdirp)
 const rimraf = require('rimraf')
@@ -110,8 +111,11 @@ class Model extends EventEmitter {
     channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
 
     let options = deviceInfo.deviceSecret
+    
+    let noticeHandles = new Map()
+    noticeHandles.set(Cmd.FROM_CLOUD_UNBIND_NOTICE, this.handleCloudUnbindNotice.bind(this))
 
-    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles)
+    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles, noticeHandles)
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
@@ -194,11 +198,12 @@ class Model extends EventEmitter {
     if (!data) return
     if (!data.hasOwnProperty('bindedUid')) return
     let props = {
-      phicommUserId: data.bindedUid === '0' ? null : data.bindedUid
+      phicommUserId: data.bindedUid
     }
-    this.account.updateUser(props, (err, data) => {
+    this.account.updateUser(props, (err, d) => {
       // notify appifi
-      debug('update user error: ', err)
+      if (err) debug('update user error: ', err)
+      if (data.bindedUid === '0') props.phicommUserId = null
       this.sendBoundUserToAppifi(props)
     })
   }
@@ -235,9 +240,13 @@ class Model extends EventEmitter {
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
-    let props = { phicommUserId: null }
+    if (!message.data || !message.data.uid || !message.deviceSN) return debug("Error Unbind Message", message)
+    if (message.data.uid !== this.account.user.phicommUserId) return debug('Error Unbind: uid mismatch')
+    if (message.data.deviceSN !== deviceInfo.deviceSN) return debug('Error Unbind: deviceSn mismatch')
+    let props = { phicommUserId: '0' }
     this.account.updateUser(props, (err, data) => {
-      if (err) return debug('*****unbind error*****', err)
+      if (err) debug('*****unbind error*****', err)
+      // just do it
       this.appStop(() => {
         this.appStart(() => {})
       })
@@ -261,6 +270,8 @@ class Model extends EventEmitter {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.uid }
+    // set default password 
+    props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
     this.account.updateUser(props, (err, data) => {
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
       this.sendBoundUserToAppifi(props)

@@ -30,9 +30,7 @@ module.exports = (auth, model) => {
 
   // only used for test 
   router.post('/boundUser', (req, res, next) => {
-    model.handleCloudAccountMessage({user: {
-      phicommUserId: '12345678'
-    }})
+    model.handleCloudAccountMessage({user: model.account.user})
     res.status(200).end()
   })
 
@@ -63,10 +61,12 @@ module.exports = (auth, model) => {
     }
   })
 
-  router.get('/station/info', (req, res, next) => {
+  router.get('/info', (req, res, next) => {
     res.status(200).json({
       deviceSN: deviceInfo.deviceSN,
-      deviceModel: deviceInfo.deviceModel
+      deviceModel: deviceInfo.deviceModel,
+      boundUser: model.account.user,
+      netState: model.channel.getState().toUpperCase()
     })
   })
 
