@@ -11,7 +11,7 @@ const os = require('os')
 const _device = (() => {
   let sn, key, cert
   try {
-    sn = fs.readFileSync('/phi/ssl/deviceSN').toString('utf8')
+    sn = fs.readFileSync('/phi/ssl/deviceSN').toString('utf8').trim()
     key = fs.readFileSync('/phi/ssl/key.pem').toString('utf8')
     cert = fs.readFileSync('/phi/ssl/cert.pem').toString('utf8')
     return { sn, key, cert }
