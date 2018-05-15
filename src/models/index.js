@@ -227,7 +227,7 @@ class Model extends EventEmitter {
       return debug(e)
     }
 
-    switch (message.type) {
+    switch (obj.type) {
       case Cmd.FROM_APPIFI_USERS_CMD:
         if (Array.isArray(obj.users)) return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
             userList: obj.users,
@@ -240,7 +240,7 @@ class Model extends EventEmitter {
         debug('appifi report started')
         break
       default:
-        debug('miss appifi message', message)
+        debug('miss appifi message', obj)
         break
     }
   }
