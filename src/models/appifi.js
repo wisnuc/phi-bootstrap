@@ -84,11 +84,8 @@ class Starting extends State {
 
     this.appifi = child.spawn(this.ctx.nodePath(), args, opts)
     this.appifi.on('error', err => console.log('Appifi Error in Starting: neglected', err))
-    this.appifi.on('message', message => this.setState('Started', this.appifi))
+    this.appifi.on('message', message => (this.ctx.emit('message', message), this.setState('Started', this.appifi)))
     this.appifi.on('close', (code, signal) => (this.appifi = null, this.setState('Failed', { code, signal })))
-    
-    // to be removed in future version TODO
-    this.timer = setTimeout(() => this.setState('Started', this.appifi), 8000)
   }
 
   stop () {

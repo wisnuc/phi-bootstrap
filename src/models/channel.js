@@ -175,30 +175,40 @@ class Channel extends EventEmitter {
 
   handleCloudMessage(message) {
     debug('FROM_CLOUD:', message)
-    if (message.type === 'req' && this.reqHandles.has(message.reqCmd)) 
-      return this.reqHandles.get(message.reqCmd)(message)
-    if (message.type === 'pip') {
-      // if (!this.isAppifiAvaliable) {} // return error
-      if (this.isAppifiAvaliable()) {
-        debug('send pip message to appifi', message)
-        return this.ctx.appifi.sendMessage(message)
-      }
-      return debug('appifi not avaliable', message)
+    switch (message.type) {
+      case 'req':
+        if (this.reqHandles.has(message.reqCmd))
+          return this.reqHandles.get(message.reqCmd)(message)
+        else debug('miss req message: ', message)
+        break
+      case 'pip':
+        if (this.isAppifiAvaliable()) {
+          debug('send pip message to appifi', message)
+          return this.ctx.appifi.sendMessage(message)
+        } else 
+          debug('appifi not availibale ', message) 
+        break
+      case 'ack':
+        if (this.msgQueue.has(message.msgId)) {
+          let handle = this.msgQueue.get(message.msgId)
+          this.msgQueue.delete(message.msgId) // remove handle
+          return handle(message)
+        }
+        else 
+          debug('miss ack message: ',message)
+        break
+      case 'notice':
+        if (this.noticeHandles.has(message.noticeType)) 
+          return this.noticeHandles.get(message.noticeType)(message)
+        else 
+          debug('miss notice message: ', message)
+        break
+      default:
+        debug('****Miss Channle Message****')
+        console.log(message)
+        debug('*****************************')
+        break
     }
-    if (message.type === 'ack') {
-      if (this.msgQueue.has(message.msgId)) {
-        let handle = this.msgQueue.get(message.msgId)
-        this.msgQueue.delete(message.msgId) // remove handle
-        return handle(message)
-      }
-      else return debug('Unhandle ack message: ',message)
-    }
-    if (message.type === 'notice') {
-      if (this.noticeHandles.has(message.noticeType)) 
-        return this.noticeHandles.get(message.noticeType)(message)
-      return debug('Unhandle notice message: ', message)
-    }
-    debug('****Miss Channdle Message****', message)
   }
 
   isAppifiAvaliable() {
