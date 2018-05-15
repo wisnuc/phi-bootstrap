@@ -183,7 +183,6 @@ class Channel extends EventEmitter {
         break
       case 'pip':
         if (this.isAppifiAvaliable()) {
-          debug('send pip message to appifi', message)
           return this.ctx.appifi.sendMessage(message)
         } else 
           debug('appifi not availibale ', message) 

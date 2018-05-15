@@ -55,16 +55,15 @@ class Account extends EventEmitter {
       // unbind
       if(!user && !props) return user
       if(!props.phicommUserId || props.phicommUserId === '0') return null
-      // TODO: jump to unbind && clean
       let currUser = user ? Object.assign({}, user) : null
-      let nextUser = currUser && props.phicommUserId == currUser.phicommUserId ? Object.assign({}, this.user, props) : props
+      let nextUser = currUser && props.phicommUserId == currUser.phicommUserId ? Object.assign({}, currUser, props) : props
       return nextUser
-    }, (err, data) => err ? callback(err) : callback(null, Object.assign({}, data, { password: undefined })))
+    }, (err, data) => err ? callback(err) : callback(null, data ? Object.assign({}, data, { password: undefined }) : null))
   }
 
   updateUserPassword (password, callback) {
     // FIXME: auth?
-    return this.updateUser({ password }, callback)
+    // return this.updateUser({ password }, callback)
   }
 
 }

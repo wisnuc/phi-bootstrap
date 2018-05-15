@@ -120,10 +120,11 @@ class Model extends EventEmitter {
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
     this.cloudToken = undefined
+    this.receiveBindedUser = false // record is received cloud bindedUid
   }
 
   handleAppifiStarted () {
-    if (this.account.user) this.sendBoundUserToAppifi(this.account.user)
+    if (this.receiveBindedUser || this.account.user) this.sendBoundUserToAppifi(this.account.user)
     if (this.cloudToken) this.appifi.sendMessage({ 
       type: Cmd.TO_APPIFI_TOKEN_CMD,
       data: {
@@ -137,10 +138,9 @@ class Model extends EventEmitter {
   }
 
   sendBoundUserToAppifi(user) {
-    debug('sendBoundUserToAppifi: ', user)
     if (this.appifi) this.appifi.sendMessage({
-      type:Cmd.TO_APPIFI_BOUND_USER_CMD,
-      data:user.phicommUserId ? user : null
+      type: Cmd.TO_APPIFI_BOUND_USER_CMD,
+      data: user
     })
   }
 
@@ -202,11 +202,11 @@ class Model extends EventEmitter {
     let props = {
       phicommUserId: data.bindedUid
     }
+    // TODO: check binedUid === account.phicommUserId
     this.account.updateUser(props, (err, d) => {
-      // notify appifi
+      this.receiveBindedUser = true
       if (err) debug('update user error: ', err)
-      if (data.bindedUid === '0') props.phicommUserId = null
-      this.sendBoundUserToAppifi(props)
+      this.sendBoundUserToAppifi(d)
     })
   }
 
@@ -247,15 +247,18 @@ class Model extends EventEmitter {
 
   /**
    * handle cloud user unbind message 
+   * use for unbind user message
    * @param {object} message
    * @param {object} message.data
    * @param {string} message.data.uid
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
+    // FIXME: just debug?
     if (!message.data || !message.data.uid || !message.data.deviceSN) return debug("Error Unbind Message", message)
     if (message.data.uid !== this.account.user.phicommUserId) return debug('Error Unbind: uid mismatch')
     if (message.data.deviceSN !== deviceInfo.deviceSN) return debug('Error Unbind: deviceSn mismatch')
+
     let props = { phicommUserId: '0' }
     this.account.updateUser(props, (err, data) => {
       if (err) debug('*****unbind error*****', err)
@@ -267,7 +270,7 @@ class Model extends EventEmitter {
   }
 
   /**
-   * 
+   * use for bind new user message
    * @param {object} message 
    * {
    *    type: 'req'
