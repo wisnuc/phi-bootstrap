@@ -30,7 +30,8 @@ const Config = require('../lib/config')
 const Cmd = Config.cmd
 const ServerConf =  Config.server
 
-const deviceInfo = require('../lib/device')()
+const getDeviceInfo = require('../lib/device')
+let deviceInfo = getDeviceInfo()
 
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
 const EApp404 = Object.assign(new Error('app not installed'), { code: 'ENOTFOUND', status: 404 })
@@ -165,6 +166,7 @@ class Model extends EventEmitter {
    */
   handleChannelConnected () {
     // create connect message
+    deviceInfo = getDeviceInfo()
     let connectBody = this.channel.createReqMessage(Cmd.TO_CLOUD_CONNECT_CMD, {
       deviceModel: deviceInfo.deviceModel,
       deviceSN: deviceInfo.deviceSN,
