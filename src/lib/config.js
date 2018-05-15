@@ -7,6 +7,7 @@ module.exports = {
     FROM_CLOUD_UNBIND_NOTICE: 'unbind',
     FROM_CLOUD_TOUCH_CMD: 'touch',
     FROM_CLOUD_BIND_CMD: 'bind',
+    FROM_APPIFI_STARTED_CMD: 'appifi_started',
     FROM_APPIFI_USERS_CMD: 'appifi_users',
     FROM_APPIFI_TOUCH_CMD: 'appifi_touch',
     TO_APPIFI_TOKEN_CMD: 'bootstrap_token',

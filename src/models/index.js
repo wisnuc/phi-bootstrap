@@ -137,9 +137,11 @@ class Model extends EventEmitter {
   }
 
   sendBoundUserToAppifi(user) {
-    // let user = u ? u : this.account.user ? this.account.user : null
     debug('sendBoundUserToAppifi: ', user)
-    if (this.appifi) this.appifi.sendMessage({ type:Cmd.TO_APPIFI_BOUND_USER_CMD, data:user.phicommUserId ? user : null })
+    if (this.appifi) this.appifi.sendMessage({
+      type:Cmd.TO_APPIFI_BOUND_USER_CMD,
+      data:user.phicommUserId ? user : null
+    })
   }
 
   handleCloudTouchReq (message) {
@@ -221,14 +223,25 @@ class Model extends EventEmitter {
     let obj
     try {
       obj = JSON.parse(message)
-    } catch (e) { return debug(e)}
-    if (obj.type === Cmd.FROM_APPIFI_USERS_CMD) {
-      if (Array.isArray(obj.users))
-        return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
-          userList: obj.users,
-          deviceSN: deviceInfo.deviceSN
-        }))
-      else return debug('invaild users', obj)
+    } catch (e) {
+      return debug(e)
+    }
+
+    switch (message.type) {
+      case Cmd.FROM_APPIFI_USERS_CMD:
+        if (Array.isArray(obj.users)) return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
+            userList: obj.users,
+            deviceSN: deviceInfo.deviceSN
+          }))
+        else
+          debug('invaild users', obj)
+        break
+      case Cmd.FROM_APPIFI_STARTED_CMD: 
+        debug('appifi report started')
+        break
+      default:
+        debug('miss appifi message', message)
+        break
     }
   }
 
@@ -240,7 +253,7 @@ class Model extends EventEmitter {
    * @param {string} message.data.deviceSN 
    */
   handleCloudUnbindNotice (message) {
-    if (!message.data || !message.data.uid || !message.deviceSN) return debug("Error Unbind Message", message)
+    if (!message.data || !message.data.uid || !message.data.deviceSN) return debug("Error Unbind Message", message)
     if (message.data.uid !== this.account.user.phicommUserId) return debug('Error Unbind: uid mismatch')
     if (message.data.deviceSN !== deviceInfo.deviceSN) return debug('Error Unbind: deviceSn mismatch')
     let props = { phicommUserId: '0' }
