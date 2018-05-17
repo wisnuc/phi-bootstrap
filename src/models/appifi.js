@@ -262,7 +262,7 @@ class Appifi extends EventEmitter {
     }
     if(!this.state.appifi) 
       return console.log(`[APPIFI]warning : appifi in ${ this.state.constructor.name } state`)
-    debug('*******send to appifi*******', message)
+    debug('*******Send To Appifi*******\n', message)
     this.state.appifi.send && this.state.appifi.send(message)
   }
 

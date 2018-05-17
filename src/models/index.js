@@ -83,8 +83,6 @@ class Model extends EventEmitter {
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
 
-    this.appifi = null
-
     process.on('uncaughtException', err => {
       console.log('uncaughtException', err)
       if (this.appifi) this.appifi.destroy()
@@ -125,6 +123,7 @@ class Model extends EventEmitter {
   }
 
   handleAppifiStarted () {
+    debug('****** handle appifi started ******', this.receiveBindedUser, this.account.user)
     if (this.receiveBindedUser || this.account.user) this.sendBoundUserToAppifi(this.account.user)
     if (this.cloudToken) this.appifi.sendMessage({ 
       type: Cmd.TO_APPIFI_TOKEN_CMD,
