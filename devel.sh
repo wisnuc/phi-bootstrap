@@ -91,7 +91,7 @@ updateAppifi()
     sudo npm i
   fi
 }
-
+echo $1
 if [ ! -d $archiveFolder ]; then
     cleanAndConfEnv
     makeAppifi
