@@ -48,15 +48,18 @@ makeAppifi()
 
     git checkout phi
 
+    sudo npm i
+
     cd ../ && mkdir build
 
     cp -r old_appifi/src/* build/
 
     cp old_appifi/package.json build/
 
-    cd build
+    cp -r old_appifi/node_modules build/
 
-    sudo npm install
+    # cd build
+    # sudo npm install
 
     apt-get update
 
@@ -85,11 +88,13 @@ updateAppifi()
   sudo npm i
 }
 
-
-
 if [ ! -d $archiveFolder ]; then
-cleanAndConfEnv
-makeAppifi
+    cleanAndConfEnv
+    makeAppifi
 else
-updateAppifi
+    updateAppifi
+    if [ $1 == "--npm-install" ]; then
+        cd "$appifiFolder/build"
+        sudo npm install
+    fi
 fi
