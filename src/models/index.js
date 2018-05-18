@@ -203,7 +203,12 @@ class Model extends EventEmitter {
     let props = {
       phicommUserId: data.bindedUid
     }
-    // TODO: check binedUid === account.phicommUserId
+
+    //check boundUser id match
+    if (this.account.user && (props.phicommUserId === '0' || props.phicommUserId !== this.account.user.phicommUserId)) {
+      this.appStop(() => this.appStart(() => {}))
+    }
+
     this.account.updateUser(props, (err, d) => {
       this.receiveBindedUser = true
       if (err) debug('update user error: ', err)
