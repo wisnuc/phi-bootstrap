@@ -59,7 +59,7 @@ module.exports = (auth, model) => {
     res.status(200).json({
       deviceSN: deviceInfo.deviceSN,
       deviceModel: deviceInfo.deviceModel,
-      boundUser: model.account.user,
+      boundUser: model.account.user ? { phicommUserId: model.account.user.phicommUserId} : null,
       netState: model.channel.getState().toUpperCase()
     })
   })

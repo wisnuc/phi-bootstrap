@@ -174,7 +174,7 @@ class Channel extends EventEmitter {
   }
 
   handleCloudMessage(message) {
-    debug('FROM_CLOUD:', message)
+    debug('FROM_CLOUD: \n', message)
     switch (message.type) {
       case 'req':
         if (this.reqHandles.has(message.reqCmd))
