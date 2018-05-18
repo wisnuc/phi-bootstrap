@@ -83,9 +83,7 @@ updateAppifi()
 
   cp -r "$archiveFolder/src/"* "$appifiFolder/build/"
   cp "$archiveFolder/package.json" "$appifiFolder/build/"
-
-  cd "$appifiFolder/build"
-  sudo npm i
+  cp -r "$archiveFolder/node_modules" "$appifiFolder/build/"
 }
 
 if [ ! -d $archiveFolder ]; then
