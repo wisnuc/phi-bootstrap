@@ -90,14 +90,22 @@ updateAppifi()
 
   cp -r "$archiveFolder/node_modules" "$appifiFolder/build/"
 }
-echo $1
+
+skipUpdate="--skip-install"
+
 if [ ! -d $archiveFolder ]; then
     cleanAndConfEnv
     makeAppifi
 else
     updateAppifi
-    if [ $1 == "--npm-install" ]; then
-        cd "$appifiFolder/build"
+    if [ $1x != "$skipUpdate"x ]; then
+        echo "===== npm install ====="
+        rm -rf "$archiveFolder/node_modules"
+        cd $archiveFolder
         sudo npm install
+        rm -rf "$appifiFolder/build/node_modules"
+        cp -r "$archiveFolder/node_modules" "$appifiFolder/build/"
+    else
+        echo "===== skip install ====="
     fi
 fi
