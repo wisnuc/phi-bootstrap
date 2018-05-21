@@ -113,24 +113,80 @@ class Connected extends State {
 
   enter(socket) {
     super.enter()
-    this.messageSep = Buffer.from('\n')
-    this.messageBuf = null
+    this.msgSep = Buffer.from('\n')
+    this.msgBuf = null
+
     this.socket = socket
     this.socket.removeAllListeners()  // remove first
-    this.socket.on('data', data => {
-      // Buffer.from(data).indexOf(this.messageSep)
-      let message 
-      try {
-        message = JSON.parse(data)
-      } catch (error) {
-        return
-      }
-      this.ctx.handleCloudMessage(message)
-    })
+    this.socket.on('data', this.handleDataEvent.bind(this))
 
     this.socket.once('error', err => this.setState("Disconnect", err))
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
+  }
+
+  handleDataEvent (data) {
+    let bufArr = this.spliceBuffer(Buffer.from(data))
+
+    let notify = (buf) => {
+      let message 
+      try {
+        message = JSON.parse(buf)
+      } catch (error) {
+        return
+      }
+      this.ctx.handleCloudMessage(message)
+    }
+
+    //msgSep not found
+    if (bufArr.length === 1) {
+      if (bufArr[0].length)
+        this.msgBuf = this.msgBuf ? Buffer.concat([this.msgBuf, buf]) : bufArr[0]
+      else if (this.msgBuf) {
+        notify(this.msgBuf.toString())
+        this.msgBuf = null
+      }      
+      return 
+    }
+
+    // bufArr length > 1
+    for (let i = 0; i < bufArr.length; i++) {
+      if (i === 0) {
+        let msg = this.msgBuf ? Buffer.concat([this.msgBuf, bufArr[i]]).toString() : bufArr[i].toString()
+        this.msgBuf = null
+        notify(msg)
+        continue
+      }
+
+      if (i === bufArr.length -1) {
+        if (bufArr[i].length) {
+          this.msgBuf = bufArr[i]
+        } else {
+          this.msgBuf = null
+        }
+        return 
+      }
+
+      notify(bufArr[i].toString())
+    }
+  }
+
+  spliceBuffer(buf) {
+    let bufArr = []
+    let index = buf.indexOf(this.msgSep)
+    
+    if (index === -1) return [buf]
+  
+    let newBuf = buf.slice(0, index)
+    bufArr.push(newBuf)
+
+    let next = buf.slice(index + 1)
+    if (!next.length) {
+      bufArr.push(next)
+      return bufArr
+    }
+  
+    return [...bufArr, ...this.spliceBuffer(next)]
   }
 
   exit() {

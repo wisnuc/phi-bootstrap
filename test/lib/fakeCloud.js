@@ -3,15 +3,15 @@ const fs = require('fs')
 const path = require('path')
 
 const options = {
-  key: fs.readFileSync(path.join(process.cwd(), '/testdata/server-key.pem')),
-  cert: fs.readFileSync(path.join(process.cwd(),'/testdata/server-cert.pem')),
+  key: fs.readFileSync(path.join(process.cwd(), '/testdata/sslKeys/server-key.pem')),
+  cert: fs.readFileSync(path.join(process.cwd(),'/testdata/sslKeys/server-cert.pem')),
 
   // This is necessary only if using the client certificate authentication.
   requestCert: true,
   // This option only has an effect when requestCert is true and defaults to true.
   // rejectUnauthorized: true,
 
-  ca: [ fs.readFileSync(path.join(process.cwd(),'/testdata/ca-cert.pem')) ]
+  ca: [ fs.readFileSync(path.join(process.cwd(),'/testdata/sslKeys/ca-cert.pem')) ]
 }
 
 let client = null
@@ -22,14 +22,14 @@ const server = tls.createServer(options, socket => {
   socket.write(`hello, welcome to server!\n`)
   socket.setEncoding('utf8')
   socket.on('data', data => {
-    process.send(data)
+    process.send && process.send(data)
   })
   socket.on('error', err => console.log('error', err))
 })
 
 server.listen(8000, () => {
   // console.log('server bound')
-  process.send(JSON.stringify({ type:"ServerStarted"}))
+  process.send && process.send(JSON.stringify({ type:"ServerStarted"}))
 })
 
 process.on('message', data => {
@@ -42,7 +42,7 @@ process.on('message', data => {
     // console.log('need sendHardwareReq')
     client.write(JSON.stringify(obj))
   } else if(data === 'clientState') {
-    process.send(JSON.stringify({ type:'clientState' ,state: client ? 'true' : 'false'}))
+    prosess.send && process.send(JSON.stringify({ type:'clientState' ,state: client ? 'true' : 'false'}))
   } else if(data === 'sendAccountInfo') {
     obj = {
       reqCmd: "CLOUD_ACCOUNT_INFO_MESSAGE",
