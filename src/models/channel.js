@@ -197,7 +197,7 @@ class Connected extends State {
   }
 
   sendToCloud(obj) {
-    debug(obj)
+    debug('Send To Cloud: \n', obj)
     let a = JSON.stringify(obj) + '\n'
     this.socket.write(a)
   }
