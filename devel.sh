@@ -18,7 +18,7 @@ echo $phiFolder
 echo $appifiFolder
 
 sudo npm i yarn -g
-sudo yarn add node-gyp
+sudo yarn add node-gyp -g
 
 cleanAndConfEnv()
 {
