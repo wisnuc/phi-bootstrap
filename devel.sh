@@ -17,9 +17,6 @@ archiveFolder="$appifiFolder/old_appifi"
 echo $phiFolder
 echo $appifiFolder
 
-sudo npm i yarn -g
-sudo npm i node-gyp -g
-
 cleanAndConfEnv()
 {
     echo "clean tmptest"
@@ -51,7 +48,7 @@ makeAppifi()
 
     git checkout phi
 
-    sudo yarn
+    sudo npm i
 
     cd ../ && mkdir build
 
@@ -62,7 +59,7 @@ makeAppifi()
     cp -r old_appifi/node_modules build/
 
     # cd build
-    # sudo yarn install
+    # sudo npm install
 
     apt-get update
 
@@ -88,7 +85,7 @@ updateAppifi()
   cp "$archiveFolder/package.json" "$appifiFolder/build/"
   
   if [ ! -d "$archiveFolder/node_modules" ]; then
-    cd $archiveFolder && sudo yarn
+    cd $archiveFolder && sudo npm i
   fi
 
   cp -r "$archiveFolder/node_modules" "$appifiFolder/build/"
@@ -102,10 +99,10 @@ if [ ! -d $archiveFolder ]; then
 else
     updateAppifi
     if [ $1x != "$skipUpdate"x ]; then
-        echo "===== yarn install ====="
+        echo "===== npm install ====="
         rm -rf "$archiveFolder/node_modules"
         cd $archiveFolder
-        sudo yarn
+        sudo npm install
         rm -rf "$appifiFolder/build/node_modules"
         cp -r "$archiveFolder/node_modules" "$appifiFolder/build/"
     else
