@@ -200,8 +200,10 @@ class Model extends EventEmitter {
     let data = message.data
     if (!data) return
     if (!data.hasOwnProperty('bindedUid')) return
+    if (!data.hasOwnProperty('phoneNumber')) return
     let props = {
-      phicommUserId: data.bindedUid
+      phicommUserId: data.bindedUid,
+      phoneNumber: data.phoneNumber
     }
 
     //check boundUser id match
@@ -288,10 +290,10 @@ class Model extends EventEmitter {
    * }
    */
   handleCloudBindReq(message) {
-    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('uid')) {
+    if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('uid') || !message.data.hasOwnProperty('phoneNumber')) {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
-    let props = { phicommUserId: message.data.uid }
+    let props = { phicommUserId: message.data.uid, phoneNumber: message.data.phoneNumber }
     // set default password 
     props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
     this.account.updateUser(props, (err, data) => {
