@@ -78,6 +78,7 @@ updateAppifi()
   echo "update appifi"
   cd $archiveFolder
   git checkout phi
+  git checkout .
   git pull
 
   rm -rf "$appifiFolder/build"
