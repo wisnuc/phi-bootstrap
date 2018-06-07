@@ -199,8 +199,8 @@ class Model extends EventEmitter {
   handleCloudBoundUserMessage (message) {
     let data = message.data
     if (!data) return
-    if (!data.hasOwnProperty('bindedUid')) return
-    if (!data.hasOwnProperty('phoneNumber')) return
+    if (!data.hasOwnProperty('bindedUid')) return console.log('================\n================\n====bindedUid not found====')
+    if (!data.hasOwnProperty('phoneNumber')) return console.log('================\n================\n==== phoneNumber not found ====')
     let props = {
       phicommUserId: data.bindedUid,
       phoneNumber: data.phoneNumber
@@ -291,6 +291,9 @@ class Model extends EventEmitter {
    */
   handleCloudBindReq(message) {
     if (!message.data || typeof message.data !== 'object' || !message.data.hasOwnProperty('uid') || !message.data.hasOwnProperty('phoneNumber')) {
+      console.log('=====  bind failed ====')
+      console.log(message)
+      console.log('=======================')
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.uid, phoneNumber: message.data.phoneNumber }
