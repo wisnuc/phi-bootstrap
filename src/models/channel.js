@@ -94,8 +94,8 @@ class Connecting extends State {
     this.socket.setEncoding('utf8')
     this.socket.on('error', err => this.setState('Disconnect', err))
     this.socket.on('end', () => this.setState('Disconnect', new Error('server end')))
-    this.socket.setKeepAlive(true, 30 * 1000)
-    this.setTimeout(10 * 1000)
+    this.socket.setKeepAlive(true, 0)
+    this.socket.setTimeout(10 * 1000)
   }
 
   exit() {
@@ -125,12 +125,12 @@ class Connected extends State {
     this.socket.once('error', err => this.setState("Disconnect", err))
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
-    
+
     this.socket.once('timeout', () => {
       console.log('socket timeout');
       this.socket.end();
     })
-    
+
   }
 
   handleDataEvent (data) {
@@ -205,7 +205,7 @@ class Connected extends State {
   }
 
   sendToCloud(obj) {
-    debug('Send To Cloud: \n', obj)
+    debug('******Send To Cloud****** \n', obj)
     let a = JSON.stringify(obj) + '\n'
     this.socket.write(a)
   }
