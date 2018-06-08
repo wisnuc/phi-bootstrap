@@ -95,7 +95,7 @@ class Connecting extends State {
     this.socket.on('error', err => this.setState('Disconnect', err))
     this.socket.on('end', () => this.setState('Disconnect', new Error('server end')))
     this.socket.setKeepAlive(true, 0)
-    this.socket.setTimeout(10 * 1000)
+    this.socket.setTimeout(0)
   }
 
   exit() {
@@ -126,7 +126,7 @@ class Connected extends State {
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
 
-    this.socket.once('timeout', () => {
+    this.socket.on('timeout', () => {
       console.log('**************')
       console.log('socket timeout')
       console.log('**************')
