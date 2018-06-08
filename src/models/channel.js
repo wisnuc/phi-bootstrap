@@ -127,8 +127,9 @@ class Connected extends State {
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
 
     this.socket.once('timeout', () => {
-      console.log('socket timeout');
-      this.socket.end();
+      console.log('**************')
+      console.log('socket timeout')
+      console.log('**************')
     })
 
   }
