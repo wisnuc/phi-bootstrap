@@ -77,7 +77,7 @@ class Model extends EventEmitter {
     })
 
     let names = ['libimage-exiftool-perl', 'imagemagick', 'ffmpeg']
-    this.deb = new Deb(names)
+    // this.deb = new Deb(names)
     
     this.device = new Device(this)
 
