@@ -298,7 +298,7 @@ class Model extends EventEmitter {
     }
     let props = { phicommUserId: message.data.uid, phoneNumber: message.data.phoneNumber }
     // set default password 
-    props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
+    // props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
     this.account.updateUser(props, (err, data) => {
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
       this.sendBoundUserToAppifi(props)
