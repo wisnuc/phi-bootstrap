@@ -270,10 +270,7 @@ class Model extends EventEmitter {
     let props = { phicommUserId: '0' }
     this.account.updateUser(props, (err, data) => {
       if (err) debug('*****unbind error*****', err)
-      // just do it
-      this.appStop(() => {
-        this.appStart(() => {})
-      })
+      this.appifi && this.appifi.sendMessage({ type: Cmd.TO_APPIFI_UNBIND_CMD, data: {} })
     })
   }
 

@@ -12,7 +12,8 @@ module.exports = {
     FROM_APPIFI_TOUCH_CMD: 'appifi_touch',
     TO_APPIFI_TOKEN_CMD: 'bootstrap_token',
     TO_APPIFI_DEVICE_CMD: 'bootstrap_device',
-    TO_APPIFI_BOUND_USER_CMD: 'bootstrap_boundUser'
+    TO_APPIFI_BOUND_USER_CMD: 'bootstrap_boundUser',
+    TO_APPIFI_UNBIND_CMD: 'bootstrap_unbind'
   },
   server: {
     port: 9001,
