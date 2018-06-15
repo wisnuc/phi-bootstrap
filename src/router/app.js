@@ -29,11 +29,11 @@ module.exports = (auth, model) => {
   })
 
   router.get('/user', (req, res, next) => {
-     res.status(200).json(model.account.user ? model.account.user : null)
+     res.status(200).json(model.account.user ? Object.assign({}, model.account.user, { password: undefined }) : null)
   })
 
   router.patch('/user/password', (req, res, next) => { 
-    model.account.updateUserPassword(req.body.password, (err, data) => {
+    model.account.updateUserPassword(req.body, (err, data) => {
       err ? next(err) : res.status(200).json(data)
     })
   })

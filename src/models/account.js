@@ -17,6 +17,8 @@ const validateUser = (user) => {
 
 }
 
+const isNonEmptyString = arg => typeof arg === 'string' && arg.length > 0
+
 /**
  * Accound struct
  * {
@@ -61,11 +63,16 @@ class Account extends EventEmitter {
     }, (err, data) => err ? callback(err) : callback(null, data ? Object.assign({}, data, { password: undefined }) : null))
   }
 
-  updateUserPassword (password, callback) {
-    // FIXME: auth?
-    // return this.updateUser({ password }, callback)
+  updateUserPassword (props, callback) {
+    if (props.password && !isNonEmptyString(props)) return callback(new Error('password type error'))
+    this.store.save(user => {
+      if (!user) throw new Error('no boundUser')
+      let nextUser = Object.assign({}, user)
+      if (props.password) nextUser.password = props.encrypted ? props.password : bcrypt.hashSync(props.password, bcrypt.genSaltSync(10))
+      return nextUser
+    }, (err, data) => err ? callback(err) : callback(null, data ? Object.assign({}, data, { password: undefined }): null))
   }
-
+  
 }
 
 module.exports = Account
