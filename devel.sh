@@ -69,7 +69,7 @@ makeAppifi()
     apt-get -y install avahi-daemon avahi-utils
 
     echo "Install essential packages for whole system"
-    apt-get -y install build-essential python-minimal openssh-server btrfs-tools imagemagick ffmpeg samba udisks2 curl
+    apt-get -y install build-essential python-minimal openssh-server btrfs-tools imagemagick ffmpeg samba udisks2 curl minidlna
 
 }
 
