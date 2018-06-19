@@ -66,6 +66,9 @@ class Model extends EventEmitter {
     mkdirp.sync(this.appifiDir)
     mkdirp.sync(this.appBallsDir)
 
+    // FIXME: random secret key
+    this.secret = 'Lord, we need a secret'
+
     // releases
     this.releases = appBalls.map(ball => new Release(this, ball))
 
@@ -82,6 +85,12 @@ class Model extends EventEmitter {
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
+
+    Object.defineProperty(this, 'boundUser', {
+      get () {
+        return this.account.user
+      }
+    })
 
     process.on('uncaughtException', err => {
       console.log('uncaughtException', err)

@@ -1,6 +1,8 @@
 const tls = require('tls')
 const EventEmitter = require('events').EventEmitter
 const UUID = require('uuid')
+const jwt = require('jwt-simple')
+const request = require('request')
 
 const debug = require('debug')('bootstrap:Channel')
 
@@ -213,7 +215,7 @@ class Connected extends State {
 
 }
 
-
+const COMMAND_URL = `/ResourceManager/nas/callback/command`
 
 /**
  * @class Channel
@@ -247,6 +249,22 @@ class Channel extends EventEmitter {
         else debug('miss req message: ', message)
         break
       case 'pip':
+        if (!this.ctx.boundUser) return 
+        let paths = message.data.urlPath.split('/').filter(x => !!x)
+        let phicommUserId = message.packageParams.uid
+        // return jwt if is boundUser
+        if (paths.length && paths[0] === 'token' && phicommUserId === this.ctx.boundUser.phicommUserId) {
+          debug('bootstrap send token')
+          return this.sendToken(message, {
+            type: 'JWT',
+            forRemote: true,
+            token: jwt.encode({
+              phicommUserId,
+              place: 'bootstrap',
+              timestamp: new Date().getTime()
+            }, this.ctx.secret)
+          })
+        }
         if (this.isAppifiAvaliable()) {
           return this.ctx.appifi.sendMessage(message)
         } else 
@@ -277,6 +295,40 @@ class Channel extends EventEmitter {
 
   isAppifiAvaliable() {
     return this.ctx.appifi.getState() === 'Started'
+  }
+
+  /**
+   * response command
+   * @param {object} res
+   * @memberof Pipe
+   */
+  sendToken (message, res) {
+    let count = 0
+    const req = () => {
+      return request({
+        uri: 'http://sohon2test.phicomm.com' + COMMAND_URL, // this.message.packageParams.waitingServer + COMMAND_URL,
+        method: 'POST',
+        headers: { Authorization: this.ctx.cloudToken },
+        body: true,
+        json: {
+          common: {
+            deviceSN: this.ctx.config.device.deviceSN,
+            msgId: message.msgId,
+            flag: false
+          },
+          data: {
+            res: res
+          }
+        }
+      }, (error, response, body) => {
+        if (!error && response.statusCode === 200) {
+          debug(`reqCommand body: ${body}`)
+        } else {
+          debug('send token failed')
+        }
+      })
+    }
+    return req()
   }
 
   getState() {
