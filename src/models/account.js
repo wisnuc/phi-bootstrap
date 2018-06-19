@@ -64,7 +64,7 @@ class Account extends EventEmitter {
   }
 
   updateUserPassword (props, callback) {
-    if (props.password && !isNonEmptyString(props)) return callback(new Error('password type error'))
+    if (!isNonEmptyString(props.password)) return callback(new Error('password type error'))
     this.store.save(user => {
       if (!user) throw new Error('no boundUser')
       let nextUser = Object.assign({}, user)
