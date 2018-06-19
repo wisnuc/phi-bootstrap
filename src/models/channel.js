@@ -4,6 +4,9 @@ const UUID = require('uuid')
 const jwt = require('jwt-simple')
 const request = require('request')
 
+const getDeviceInfo = require('../lib/device')
+let deviceInfo = getDeviceInfo()
+
 const debug = require('debug')('bootstrap:Channel')
 
 const CONNECT_STATE = {
@@ -312,7 +315,7 @@ class Channel extends EventEmitter {
         body: true,
         json: {
           common: {
-            deviceSN: this.ctx.config.device.deviceSN,
+            deviceSN: deviceInfo.deviceSN,
             msgId: message.msgId,
             flag: false
           },
