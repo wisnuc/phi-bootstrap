@@ -309,7 +309,7 @@ class Channel extends EventEmitter {
     let count = 0
     const req = () => {
       return request({
-        uri: 'http://sohon2test.phicomm.com' + COMMAND_URL, // this.message.packageParams.waitingServer + COMMAND_URL,
+        uri: `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${message.packageParams.waitingServer}/command`,
         method: 'POST',
         headers: { Authorization: this.ctx.cloudToken },
         body: true,
