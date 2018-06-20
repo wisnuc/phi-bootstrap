@@ -253,7 +253,6 @@ class Channel extends EventEmitter {
         break
       case 'pip':
         if (!this.ctx.boundUser) return 
-        /*
         let paths = message.data.urlPath.split('/').filter(x => !!x)
         let phicommUserId = message.packageParams.uid
         // return jwt if is boundUser
@@ -268,7 +267,7 @@ class Channel extends EventEmitter {
               timestamp: new Date().getTime()
             }, this.ctx.secret)
           })
-        } */
+        } 
         if (this.isAppifiAvaliable()) {
           return this.ctx.appifi.sendMessage(message)
         } else 
@@ -308,9 +307,12 @@ class Channel extends EventEmitter {
    */
   sendToken (message, res) {
     debug('token message',  message)
+    let urlTest = `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
+    let urlDev = `http://sohon2dev.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
+    let url = process.argv.includes('--devCloud') ? urlDev : urlTest
     const req = () => {
       return request({
-        uri: `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${message.packageParams.waitingServer}/command`,
+        uri: url,
         method: 'POST',
         headers: { Authorization: this.ctx.cloudToken },
         body: true,
