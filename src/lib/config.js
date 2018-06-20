@@ -17,7 +17,8 @@ module.exports = {
   },
   server: {
     port: 9001,
-    addr: 'sohon2test.phicomm.com'
+    addr: 'sohon2test.phicomm.com',
+    devAddr: 'sohon2dev.phicomm.com'
   },
   chassis: {
     dir: '/mnt/reserved/userdata/phicomm',

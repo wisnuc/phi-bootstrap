@@ -123,7 +123,9 @@ class Model extends EventEmitter {
     let noticeHandles = new Map()
     noticeHandles.set(Cmd.FROM_CLOUD_UNBIND_NOTICE, this.handleCloudUnbindNotice.bind(this))
 
-    this.channel = new Channel(this, ServerConf.addr, ServerConf.port, options, channelHandles, noticeHandles)
+    let addr = process.argv.includes('--devCloud') ? ServerConf.devAddr : ServerConf.addr
+    
+    this.channel = new Channel(this, addr, ServerConf.port, options, channelHandles, noticeHandles)
 
     this.channel.on('Connected', this.handleChannelConnected.bind(this))
     
