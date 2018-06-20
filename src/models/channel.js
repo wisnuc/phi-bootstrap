@@ -306,7 +306,7 @@ class Channel extends EventEmitter {
    * @memberof Pipe
    */
   sendToken (message, res) {
-    let count = 0
+    debug('token message',  message)
     const req = () => {
       return request({
         uri: `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${message.packageParams.waitingServer}/command`,
