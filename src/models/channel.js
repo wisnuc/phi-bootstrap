@@ -253,6 +253,7 @@ class Channel extends EventEmitter {
         break
       case 'pip':
         if (!this.ctx.boundUser) return 
+        /*
         let paths = message.data.urlPath.split('/').filter(x => !!x)
         let phicommUserId = message.packageParams.uid
         // return jwt if is boundUser
@@ -267,7 +268,7 @@ class Channel extends EventEmitter {
               timestamp: new Date().getTime()
             }, this.ctx.secret)
           })
-        }
+        } */
         if (this.isAppifiAvaliable()) {
           return this.ctx.appifi.sendMessage(message)
         } else 
