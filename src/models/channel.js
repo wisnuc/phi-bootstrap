@@ -327,7 +327,7 @@ class Channel extends EventEmitter {
         if (!error && response.statusCode === 200) {
           debug(`reqCommand body: ${body}`)
         } else {
-          debug('send token failed')
+          debug('send token failed', body)
         }
       })
     }
