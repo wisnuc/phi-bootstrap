@@ -87,7 +87,7 @@ class Disconnect extends State {
 
 }
 
-
+/** start connect to cloud */
 class Connecting extends State {
 
   enter() {
@@ -130,13 +130,6 @@ class Connected extends State {
     this.socket.once('error', err => this.setState("Disconnect", err))
 
     this.socket.once('end', () => this.setState('Disconnect', new Error('server end')))
-
-    this.socket.on('timeout', () => {
-      console.log('**************')
-      console.log('socket timeout')
-      console.log('**************')
-    })
-
   }
 
   handleDataEvent (data) {
@@ -172,6 +165,9 @@ class Connected extends State {
         continue
       }
 
+      // do check endpoint.
+      // if empty string, mean last-1 is complete message
+      // else buffer last-1 item
       if (i === bufArr.length -1) {
         if (bufArr[i].length) {
           this.msgBuf = bufArr[i]
@@ -185,6 +181,12 @@ class Connected extends State {
     }
   }
 
+  /**
+   * use msgSep to split buffer
+   * @param {Buffer} buf 
+   * test buffer: xxxxxxxxxMSGSEPxxxxxxxxxMSGSEP
+   * return [xxxxxxxxx, xxxxxxxxx]
+   */
   spliceBuffer(buf) {
     let bufArr = []
     let index = buf.indexOf(this.msgSep)
@@ -248,30 +250,21 @@ class Channel extends EventEmitter {
     switch (message.type) {
       case 'req':
         if (this.reqHandles.has(message.reqCmd))
-          return this.reqHandles.get(message.reqCmd)(message)
-        else debug('miss req message: ', message)
+          this.reqHandles.get(message.reqCmd)(message)
         break
       case 'pip':
         if (!this.ctx.boundUser) return 
         let paths = message.data.urlPath.split('/').filter(x => !!x)
         let phicommUserId = message.packageParams.uid
         // return jwt if is boundUser
-        if (paths.length && paths[0] === 'token' && phicommUserId === this.ctx.boundUser.phicommUserId) {
-          debug('bootstrap send token')
-          return this.sendToken(message, {
-            type: 'JWT',
-            forRemote: true,
-            token: jwt.encode({
-              phicommUserId,
-              place: 'bootstrap',
-              timestamp: new Date().getTime()
-            }, this.ctx.secret)
-          })
-        } 
+        if (paths.length && paths[0] === 'token' && phicommUserId === this.ctx.boundUser.phicommUserId)
+          return this.sendToken(message, phicommUserId)
         if (this.isAppifiAvaliable()) {
           return this.ctx.appifi.sendMessage(message)
-        } else 
-          debug('appifi not availibale ', message) 
+        } else {
+          debug('appifi not availibale ', message)
+          //TODO: bootstrap response pipe message, return error { message: 'fruixmix not started'}
+        }
         break
       case 'ack':
         if (this.msgQueue.has(message.msgId)) {
@@ -279,19 +272,12 @@ class Channel extends EventEmitter {
           this.msgQueue.delete(message.msgId) // remove handle
           return handle(message)
         }
-        else 
-          debug('miss ack message: ',message)
         break
       case 'notice':
-        if (this.noticeHandles.has(message.noticeType)) 
-          return this.noticeHandles.get(message.noticeType)(message)
-        else 
-          debug('miss notice message: ', message)
+        if (this.noticeHandles.has(message.noticeType))
+          this.noticeHandles.get(message.noticeType)(message)
         break
       default:
-        debug('****Miss Channle Message****')
-        console.log(message)
-        debug('*****************************')
         break
     }
   }
@@ -301,15 +287,21 @@ class Channel extends EventEmitter {
   }
 
   /**
-   * response command
-   * @param {object} res
-   * @memberof Pipe
+   * response pipe-token api, if request user is boundUser
    */
-  sendToken (message, res) {
-    debug('token message',  message)
+  sendToken (message, phicommUserId) {
+    let data = {
+      type: 'JWT',
+      forRemote: true,
+      token: jwt.encode({
+        phicommUserId,
+        place: 'bootstrap',
+        timestamp: new Date().getTime()
+      }, this.ctx.secret)
+    }
     let urlTest = `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
     let urlDev = `http://sohon2dev.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
-    let url = process.argv.includes('--devCloud') ? urlDev : urlTest
+    let url = this.ctx.useDevCloud ? urlDev : urlTest
     const req = () => {
       return request({
         uri: url,
@@ -323,7 +315,7 @@ class Channel extends EventEmitter {
             flag: false
           },
           data: {
-            res: res
+            res: data
           }
         }
       }, (error, response, body) => {

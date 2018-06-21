@@ -69,6 +69,9 @@ class Model extends EventEmitter {
     // FIXME: random secret key
     this.secret = 'Lord, we need a secret'
 
+    this.useFakeDevice = process.argv.includes('--useFakeDevice')
+    this.useDevCloud = process.argv.includes('--devCloud')
+
     // releases
     this.releases = appBalls.map(ball => new Release(this, ball))
 
@@ -121,9 +124,10 @@ class Model extends EventEmitter {
     let options = deviceInfo.deviceSecret
     
     let noticeHandles = new Map()
+
     noticeHandles.set(Cmd.FROM_CLOUD_UNBIND_NOTICE, this.handleCloudUnbindNotice.bind(this))
 
-    let addr = process.argv.includes('--devCloud') ? ServerConf.devAddr : ServerConf.addr
+    let addr = this.useDevCloud ? ServerConf.devAddr : ServerConf.addr
     
     this.channel = new Channel(this, addr, ServerConf.port, options, channelHandles, noticeHandles)
 
@@ -134,7 +138,6 @@ class Model extends EventEmitter {
   }
 
   handleAppifiStarted () {
-    debug('****** handle appifi started ******', this.receiveBindedUser, this.account.user)
     if (this.receiveBindedUser || this.account.user) this.sendBoundUserToAppifi(this.account.user)
     if (this.cloudToken) this.appifi.sendMessage({ 
       type: Cmd.TO_APPIFI_TOKEN_CMD,
@@ -155,6 +158,10 @@ class Model extends EventEmitter {
     })
   }
 
+  /**
+   * handle cloud touch req, response 'ok' or 'timeout'
+   * @param {object} message 
+   */
   handleCloudTouchReq (message) {
     debug('handleCloudTouchReq')
     let msgId = message.msgId
@@ -168,10 +175,10 @@ class Model extends EventEmitter {
 
   /**
    * 1. req 发送设备接入请求 to Cloud
-   * 2. 1返回结果　包括　boundUser
+   * 2. 返回结果　包括　boundUser
    * 3. 发送boundUser to Appifi 
    * 4. req 发送Token请求 To Cloud
-   * 5. 4返回Token
+   * 5. 返回Token
    * 6. 发送Token To Appifi
    */
   handleChannelConnected () {
@@ -204,14 +211,19 @@ class Model extends EventEmitter {
    *    msgId: 'xxx'
    *    data: {
    *       uid: "" //　设备绑定用户phicomm bindedUid, 未绑定时值为０
+   *       phoneNumber:"" // 设备绑定用户手机号,未绑定为空字串
    *    }
    * } 
    */
   handleCloudBoundUserMessage (message) {
     let data = message.data
     if (!data) return
-    if (!data.hasOwnProperty('bindedUid')) return console.log('================\n================\n====bindedUid not found====')
-    if (!data.hasOwnProperty('phoneNumber')) return console.log('================\n================\n==== phoneNumber not found ====')
+    if (!data.hasOwnProperty('bindedUid')) {
+      return console.log('====bindedUid not found====')
+    }
+    if (!data.hasOwnProperty('phoneNumber')) {
+      return console.log('==== phoneNumber not found ====')
+    }
     let props = {
       phicommUserId: data.bindedUid,
       phoneNumber: data.phoneNumber
@@ -224,13 +236,8 @@ class Model extends EventEmitter {
 
     this.account.updateUser(props, (err, d) => {
       this.receiveBindedUser = true
-      if (err) debug('update user error: ', err)
-      this.sendBoundUserToAppifi(d)
+      if (!err) this.sendBoundUserToAppifi(d)
     })
-  }
-
-  handleCloudChangePwdMessage(message) {
-    
   }
 
   /**
@@ -238,28 +245,27 @@ class Model extends EventEmitter {
    * @param {*} message 
    */
   handleAppifiMessage(message) {
-    debug('***FROM_APPIFI_MESSAGE:', message)
+    debug('***FROM_APPIFI_MESSAGE:\n', message)
     let obj
     try {
       obj = JSON.parse(message)
     } catch (e) {
-      return debug(e)
+      return console.log('FROM_APPIFI_MESSAGE, parse error: ', e)
     }
 
     switch (obj.type) {
       case Cmd.FROM_APPIFI_USERS_CMD:
-        if (Array.isArray(obj.users)) return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
+        if (Array.isArray(obj.users)) {
+          return this.channel.send(this.channel.createReqMessage(Cmd.TO_CLOUD_SERVICE_USER_CMD, {
             userList: obj.users,
             deviceSN: deviceInfo.deviceSN
           }))
-        else
-          debug('invaild users', obj)
+        }
         break
       case Cmd.FROM_APPIFI_STARTED_CMD: 
-        debug('appifi report started')
+        debug('appifi report started, appifi server listen on port 3000')
         break
       default:
-        debug('miss appifi message', obj)
         break
     }
   }
@@ -280,8 +286,7 @@ class Model extends EventEmitter {
 
     let props = { phicommUserId: '0' }
     this.account.updateUser(props, (err, data) => {
-      if (err) debug('*****unbind error*****', err)
-      this.appifi && this.appifi.sendMessage({ type: Cmd.TO_APPIFI_UNBIND_CMD, data: {} })
+      if (!err) this.appifi && this.appifi.sendMessage({ type: Cmd.TO_APPIFI_UNBIND_CMD, data: {} })
     })
   }
 
@@ -404,17 +409,6 @@ class Model extends EventEmitter {
     }
   }
 
-  destroy () {
-    this.scheduled = true
-
-    if (this.appifi) this.appifi.stop()
-    this.releases.forEach(r => r.stop())
-
-    this.channel.destroy()
-  }
-
-  /////////////////////////////////////////////////////////////////////////////
-
   async startAppifiAsync () {
     if (!this.appifi) throw new Error('appifi not found')
     this.appifi.startAsync()
@@ -466,8 +460,6 @@ class Model extends EventEmitter {
     // start appifi
     this.appifi = new Appifi(this, tagName)
   }
-
-  //////////////////////////////////////////////////////////////////////////////
 
   view () {
     return {
@@ -537,6 +529,16 @@ class Model extends EventEmitter {
   fetchStart(callback) {
     this.fetch.start()
     process.nextTick(() => callback(null))
+  }
+
+  destroy () {
+    this.scheduled = true
+
+    if (this.appifi) this.appifi.stop()
+    this.releases.forEach(r => r.stop())
+
+    this.channel.destroy()
+    this.device.destroy()
   }
 }
 
