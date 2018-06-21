@@ -4,7 +4,7 @@
   "description": "",
   "main": "app.js",
   "scripts": {
-    "start": "node src/app.js --root tmptest --global-node --standalone",
+    "start": "node src/app.js --root tmptest --global-node --standalone  --smb --dlna",
     "build": "node_modules/.bin/nexe src/app.js",
     "dev": "node src/app.js --root tmptest --global-node --standalone --smb --dlna --devCloud",
     "test": "echo \"Error: no test specified\" && exit 1"
