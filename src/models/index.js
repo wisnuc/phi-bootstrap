@@ -118,7 +118,7 @@ class Model extends EventEmitter {
     let channelHandles = new Map()
 
     channelHandles.set(Cmd.FROM_CLOUD_TOUCH_CMD, this.handleCloudTouchReq.bind(this))
-    channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
+    // channelHandles.set(Cmd.CLOUD_CHANGE_PASSWARD_MESSAGE, this.handleCloudChangePwdMessage.bind(this))
     channelHandles.set(Cmd.FROM_CLOUD_BIND_CMD, this.handleCloudBindReq.bind(this))
 
     let options = deviceInfo.deviceSecret
