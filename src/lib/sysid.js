@@ -1,18 +1,32 @@
 const fs = require('fs')
 const child = require('child_process')
 
+const phiSNPath = '/phi/ssl/deviceSN'
+
 const x64 = callback => fs.stat('/proc/BOARD_io', err => {
   if (err && err.code === 'ENOENT') {
-    child.exec('dmidecode -s system-serial-number', (err, stdout1) => err
-      ? callback(err)
-      : child.exec('dmidecode -s system-uuid', (err, stdout2) => err
+    fs.readFile(phiSNPath, (err, data) => {
+      if (err) {
+        child.exec('dmidecode -s system-serial-number', (err, stdout1) => err
           ? callback(err)
-          : callback(null, { 
-              arch: 'x64',
-              model: 'generic', 
-              serial: stdout1.toString().trim(),
-              uuid: stdout2.toString().trim()
-            })))
+          : child.exec('dmidecode -s system-uuid', (err, stdout2) => err
+              ? callback(err)
+              : callback(null, { 
+                  arch: 'x64',
+                  model: 'generic', 
+                  serial: stdout1.toString().trim(),
+                  uuid: stdout2.toString().trim()
+                })))
+      } else {
+        let sn = data.toString().trim()
+        callback(null, { 
+          arch: 'x64',
+          model: 'n2', 
+          serial: sn
+        })
+      }
+    })
+    
   } else if (err) {
     callback(err)
   } else {
