@@ -89,7 +89,7 @@ class Model extends EventEmitter {
 
     this.device = new Device(this)
 
-    this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
+    this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'btmp'))
 
     Object.defineProperty(this, 'boundUser', {
       get () {
