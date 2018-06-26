@@ -34,7 +34,7 @@ const root = (rootarg && path.resolve(rootarg)) || '/phi'
 console.log(`root is ${root}`)
 
 const createApp1 = (err, model) => {
-  let auth = new Auth(model.conf.secret, () => model.account.user ? [user] : [])
+  let auth = new Auth(model.conf.secret, () => model.account.user ? [model.account.user] : [])
   let opts = {
     auth: auth.middleware,
     setttings: { json: { spaces: 2 } },
