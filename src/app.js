@@ -18,7 +18,6 @@ const init = require('./init')
 const appRouter = require('./router/app')
 const Auth = require('./middleware/Auth')
 const createApp = require('./lib/express')
-const Config = require('./lib/config')
 
 /** constants **/
 const githubUrl = 'https://api.github.com/repos/wisnuc/appifi-release/releases'
@@ -30,7 +29,7 @@ const rootarg = process.argv
     return false
   })
 
-const root = (rootarg && path.resolve(rootarg)) || Config.chassis.dir
+const root = (rootarg && path.resolve(rootarg)) || '/phi'
 
 console.log(`root is ${root}`)
 
