@@ -21,7 +21,17 @@ class Auth {
   @param {string} secret - secret string for JWT token
   */
   constructor (secret, users = []) {
-    this.users = users
+    this._users = users
+    Object.defineProperty(this, 'users', {
+      get () {
+        let value = typeof this._users === 'function'
+          ? this._users()
+          : this._users
+
+        return Array.isArray(value) ? value : []
+      }
+    })
+
     this.secret = secret
 
     let jwtOpts = {
@@ -77,7 +87,7 @@ class Auth {
     if (this.users.length === 0) {
       done(null, false, { message: 'not available' })
     } else {
-      let user = this.users.find(u => u.uuid === payload.uuid)
+      let user = this.users.find(u => u.phicommUserId === payload.phicommUserId)
       if (!user) {
         done(null, false, { message: 'user not found' })
       } else if (user.disabled) {
@@ -93,7 +103,7 @@ class Auth {
   strip (user) {
     // TODO
     return {
-      uuid: user.uuid
+      phicommUserId: user.phicommUserId
     }
   }
 

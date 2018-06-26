@@ -297,11 +297,11 @@ class Channel extends EventEmitter {
         phicommUserId,
         place: 'bootstrap',
         timestamp: new Date().getTime()
-      }, this.ctx.secret)
+      }, this.ctx.conf.secret)
     }
     let urlTest = `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
     let urlDev = `http://sohon2dev.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
-    let url = this.ctx.useDevCloud ? urlDev : urlTest
+    let url = this.ctx.conf.useDevCloud ? urlDev : urlTest
     const req = () => {
       return request({
         uri: url,

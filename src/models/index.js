@@ -67,11 +67,12 @@ class Model extends EventEmitter {
     mkdirp.sync(this.appBallsDir)
 
     // FIXME: random secret key
-    this.secret = 'Lord, we need a secret'
+    this.conf = {}
+    this.conf.secret = 'Lord, we need a secret'
+    this.conf.useFakeDevice = process.argv.includes('--useFakeDevice')
+    this.conf.useDevCloud = process.argv.includes('--devCloud')
 
-    this.useFakeDevice = process.argv.includes('--useFakeDevice')
-    this.useDevCloud = process.argv.includes('--devCloud')
-
+    /*
     // releases
     this.releases = appBalls.map(ball => new Release(this, ball))
 
@@ -83,8 +84,9 @@ class Model extends EventEmitter {
     })
 
     let names = ['libimage-exiftool-perl', 'imagemagick', 'ffmpeg']
-    // this.deb = new Deb(names)
-    
+    this.deb = new Deb(names)
+    */
+
     this.device = new Device(this)
 
     this.account = new Account(this, path.join(root, 'user.json'), path.join(root, 'tmp'))
@@ -127,7 +129,7 @@ class Model extends EventEmitter {
 
     noticeHandles.set(Cmd.FROM_CLOUD_UNBIND_NOTICE, this.handleCloudUnbindNotice.bind(this))
 
-    let addr = this.useDevCloud ? ServerConf.devAddr : ServerConf.addr
+    let addr = this.conf.useDevCloud ? ServerConf.devAddr : ServerConf.addr
     
     this.channel = new Channel(this, addr, ServerConf.port, options, channelHandles, noticeHandles)
 

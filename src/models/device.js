@@ -131,7 +131,7 @@ class LedBusy extends LedBase {
  * device module control all device interface
  * change led state
  * listen power button
- * if ctx.useFakeDevice true, polling POWER_EVENT file and write led state to LED_EVENT
+ * if ctx.conf.useFakeDevice true, polling POWER_EVENT file and write led state to LED_EVENT
  */
 class Device {
 
@@ -177,7 +177,7 @@ class Device {
 
   // =>   /usr/bin/inotifywait -mrq --timefmt '%Y/%m/%d-%H:%M:%S' --format '%T %w %f' -e attrib /etc/button/
   pollingPowerButton(timeout, callback) {
-    if (this.ctx.useFakeDevice) { // not n2
+    if (this.ctx.conf.useFakeDevice) { // not n2
       let exit = (err, isAuth) => {
         clearInterval(loopTimer)
         clearTimeout(timeoutTimer)

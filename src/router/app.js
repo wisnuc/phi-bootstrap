@@ -28,7 +28,7 @@ module.exports = (auth, model) => {
     }
   })
 
-  router.get('/user', (req, res, next) => {
+  router.get('/user', auth.jwt(), (req, res, next) => {
      res.status(200).json(model.account.user ? Object.assign({}, model.account.user, { password: undefined }) : null)
   })
 
