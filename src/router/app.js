@@ -58,7 +58,7 @@ module.exports = (auth, model) => {
   router.get('/platinum', (req, res, next) => res.status(200).json({ status: model.platinum.isOn() }))
 
   router.post('/platinum', (req, res, next) => {
-    let isOn = res.body.status
+    let isOn = req.body.status
     if (typeof isOn !== 'boolean') {
       return next(Object.assign(new Error('status error'), { status: 400 }))
     } else {
