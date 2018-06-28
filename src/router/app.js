@@ -62,7 +62,7 @@ module.exports = (auth, model) => {
     if (typeof isOn !== 'boolean') {
       return next(Object.assign(new Error('status error'), { status: 400 }))
     } else {
-      model.platinum.setOnOff(isOn, err ? next(err) : res.status(200).end())
+      model.platinum.setOnOff(isOn, err => err ? next(err) : res.status(200).end())
     }
   })
 
