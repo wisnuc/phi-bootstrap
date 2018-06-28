@@ -99,6 +99,7 @@ class Connecting extends State {
     this.socket.setEncoding('utf8')
     this.socket.on('error', err => this.setState('Disconnect', err))
     this.socket.on('end', () => this.setState('Disconnect', new Error('server end')))
+    this.socket.on('close', () => this.setState('Disconnect', new Error('server closed')))
     this.socket.setKeepAlive(true, 0)
     this.socket.setTimeout(0)
   }
