@@ -55,6 +55,17 @@ module.exports = (auth, model) => {
     }
   })
 
+  router.get('/platinum', (req, res, next) => res.status(200).json({ status: model.platinum.isOn() }))
+
+  router.post('/platinum', (req, res, next) => {
+    let isOn = res.body.status
+    if (typeof isOn !== 'boolean') {
+      return next(Object.assign(new Error('status error'), { status: 400 }))
+    } else {
+      model.platinum.setOnOff(isOn, err ? next(err) : res.status(200).end())
+    }
+  })
+
   router.get('/info', (req, res, next) => {
     res.status(200).json({
       deviceSN: deviceInfo.deviceSN,

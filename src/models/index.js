@@ -25,6 +25,7 @@ const Deb = require('./deb')
 const Device = require('./device')
 const Channel = require('./channel') 
 const Account = require('./account')
+const Platinum = require('./platinum')
 
 const Config = require('../lib/config')
 const Cmd = Config.cmd
@@ -88,6 +89,8 @@ class Model extends EventEmitter {
     */
 
     this.device = new Device(this)
+
+    this.platinum = new Platinum(this, path.join(Config.chassis.dir, 'platinum.json'), path.join(Config.chassis.dir, 'btmp'))
 
     this.account = new Account(this, path.join(Config.chassis.dir, 'user.json'), path.join(Config.chassis.dir, 'btmp'))
 
