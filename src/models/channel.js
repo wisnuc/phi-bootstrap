@@ -3,6 +3,7 @@ const EventEmitter = require('events').EventEmitter
 const UUID = require('uuid')
 const jwt = require('jwt-simple')
 const request = require('request')
+const child = require('child_process')
 
 const getDeviceInfo = require('../lib/device')
 let deviceInfo = getDeviceInfo()
@@ -100,8 +101,7 @@ class Connecting extends State {
     this.socket.on('error', err => this.setState('Disconnect', err))
     this.socket.on('end', () => this.setState('Disconnect', new Error('server end')))
     this.socket.on('close', () => this.setState('Disconnect', new Error('server closed')))
-    this.socket.setKeepAlive(true, 0)
-    this.socket.setTimeout(0)
+    this.socket.setKeepAlive(true, 100)
   }
 
   exit() {
@@ -121,6 +121,9 @@ class Connected extends State {
 
   enter(socket) {
     super.enter()
+    child.exec('echo 60 > /proc/sys/net/ipv4/tcp_keepalive_time', err => debug('echo tcp_keepalive_time err: ', err))
+    child.exec('echo 5 > /proc/sys/net/ipv4/tcp_keepalive_intvl', err => debug('echo tcp_keepalive_intvl err: ', err))
+    child.exec('echo 3 > /proc/sys/net/ipv4/tcp_keepalive_probes', err => debug('echo tcp_keepalive_probes err: ', err))
     this.msgSep = Buffer.from('\n')
     this.msgBuf = null
 
