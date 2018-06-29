@@ -71,12 +71,21 @@ const memory = () => {
  * memory: memory(), 
  */
 module.exports = () => {
+  let releases
+  try {
+    releases = JSON.parse(fs.readFileSync('/mnt/reserved/fw_ver_release.json').toString())
+  } catch(e) {
+    console.log('==========================')
+    console.log('Error: ENOENT fw_ver_release')
+    console.log('user default version')
+    console.log('==========================')
+  }
   return {
     deviceSN: deviceSN(),
     deviceSecret: deviceSecret(),
-    deviceModel: deviceModel(),
-    softwareVersion: softwareVersion(),
-    hardwareVersion: hardwareVersion(),
+    deviceModel: (releases && releases.model) || deviceModel(),
+    softwareVersion: (releases && releases.fw_ver) || softwareVersion(),
+    hardwareVersion: (releases && releases.hw_ver) || hardwareVersion(),
     net: networkInterface()
   }
 }
