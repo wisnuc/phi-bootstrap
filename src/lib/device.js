@@ -40,11 +40,11 @@ const deviceModel = () => {
 }
 
 const softwareVersion = () => {
-  return 'v1.0.0'
+  return '1.0.0'
 }
 
 const hardwareVersion = () => {
-  return 'v1.0.0'
+  return '1.0.0'
 }
 
 const networkInterface = () => {
