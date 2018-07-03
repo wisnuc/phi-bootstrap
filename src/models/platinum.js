@@ -3,6 +3,7 @@ const path = require('path')
 const fs = require('fs')
 const DataStore = require('../lib/DataStore')
 const E = require('../lib/error')
+const child = require('child_process')
 
 class Platinum {
 
@@ -25,7 +26,8 @@ class Platinum {
   }
 
   handleUpdate() {
-
+    let isOn = !this.setting
+    child.exec(`systemctl ${ isOn ? 'start' : 'stop' } peerstar`)
   }
 
   isOn () {
