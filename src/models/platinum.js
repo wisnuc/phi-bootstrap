@@ -5,6 +5,12 @@ const DataStore = require('../lib/DataStore')
 const E = require('../lib/error')
 const child = require('child_process')
 
+const PlatinumState = {
+  UNSET: 'unset',
+  ON: 'on',
+  OFF: 'off'
+}
+
 class Platinum {
 
   constructor(ctx, src, tmp) {
@@ -26,16 +32,16 @@ class Platinum {
   }
 
   handleUpdate() {
-    let isOn = !this.setting
+    let isOn = this.setting ? this.setting.isOn : true
     child.exec(`systemctl ${ isOn ? 'start' : 'stop' } peerstar`)
   }
 
   isOn () {
-    return !this.setting
+    return this.setting ? this.setting.isOn ? 'on' : 'off' : 'unset' 
   }
 
   setOnOff (isOn, callback) {
-    let data = isOn ? null : {}
+    let data = { isOn: !!isOn }
     this.store.save(data, callback)
   }
 }
