@@ -241,7 +241,7 @@ class Model extends EventEmitter {
 
     this.account.updateUser(props, (err, d) => {
       this.receiveBindedUser = true
-      if (!err) this.sendBoundUserToAppifi(d)
+      if (!err) this.sendBoundUserToAppifi(this.account.user)
     })
   }
 
@@ -315,11 +315,9 @@ class Model extends EventEmitter {
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
     }
     let props = { phicommUserId: message.data.uid, phoneNumber: message.data.phoneNumber }
-    // set default password 
-    // props.password = bcrypt.hashSync('phicomm', bcrypt.genSaltSync(10))
     this.account.updateUser(props, (err, data) => {
       if (err) return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'failure' }))
-      this.sendBoundUserToAppifi(props)
+      this.sendBoundUserToAppifi(this.account.user)
       return this.channel.send(this.channel.createAckMessage(message.msgId, { status: 'success' }))
     })
   }
