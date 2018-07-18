@@ -270,6 +270,10 @@ class Model extends EventEmitter {
       case Cmd.FROM_APPIFI_STARTED_CMD: 
         debug('appifi report started, appifi server listen on port 3000')
         break
+      case Cmd.FROM_APPIFI_BOUNDVOLUME_UPDATE_CMD:
+        debug('appifi report boundVolume update')
+        this.platinum.checkAndRestart()
+        break
       default:
         break
     }

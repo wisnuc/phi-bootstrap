@@ -36,6 +36,13 @@ class Platinum {
     child.exec(`systemctl ${ isOn ? 'start' : 'stop' } peerstar`)
   }
 
+  checkAndRestart() {
+    if ((this.setting && this.setting.isOn) || !this.setting) {
+      return child.exec(`systemctl start peerstar`)
+    }
+    return child.exec(`systemctl stop peerstar`)
+  }
+
   isOn () {
     return this.setting ? this.setting.isOn ? 'on' : 'off' : 'unset' 
   }
