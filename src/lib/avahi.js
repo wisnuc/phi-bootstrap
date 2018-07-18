@@ -4,6 +4,8 @@ const child = Promise.promisifyAll(require('child_process'))
 const path = require('path')
 const UUID = require('uuid')
 
+const mkdirpAsync = Promise.promisify(require('mkdirp'))
+
 const avahiDaemonConfP = '/etc/avahi/avahi-daemon.conf'
 const phicommServiceConfP = '/etc/avahi/services/phicomm.service'
 
@@ -50,6 +52,7 @@ const genServiceConf = `
 `
 
 const startAvahiAsync = async (tmpDir, hostname) => {
+  await mkdirpAsync(tmpDir)
   let tmpDaemonP = path.join(tmpDir, UUID.v4())
   await fs.writeFileAsync(tmpDaemonP, genDaemonConf(hostname))
   await fs.renameAsync(tmpDaemonP, avahiDaemonConfP)
