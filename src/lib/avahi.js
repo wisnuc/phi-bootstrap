@@ -49,7 +49,7 @@ const genServiceConf = `
 </service-group>
 `
 
-const startAvahiAsync = (tmpDir, hostname) => {
+const startAvahiAsync = async (tmpDir, hostname) => {
   let tmpDaemonP = path.join(tmpDir, UUID.v4())
   await fs.writeFileAsync(tmpDaemonP, genDaemonConf(hostname))
   await fs.renameAsync(tmpDaemonP, avahiDaemonConfP)
