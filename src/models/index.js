@@ -94,9 +94,9 @@ class Model extends EventEmitter {
 
     this.device = new Device(this)
 
-    this.platinum = new Platinum(this, path.join(Config.chassis.dir, 'platinum.json'), path.join(Config.chassis.dir, 'btmp'))
+    this.platinum = new Platinum(this, path.join(Config.chassis.dir, 'platinum.json'), path.join(Config.chassis.dir, 'btmp', 'platinum'))
 
-    this.account = new Account(this, path.join(Config.chassis.dir, 'user.json'), path.join(Config.chassis.dir, 'btmp'))
+    this.account = new Account(this, path.join(Config.chassis.dir, 'user.json'), path.join(Config.chassis.dir, 'btmp', 'account'))
 
     Object.defineProperty(this, 'boundUser', {
       get () {
@@ -149,7 +149,7 @@ class Model extends EventEmitter {
 
   startAvahi() {
     let hostname = `phi-${ deviceInfo.deviceModel }-${ deviceInfo.deviceSN }`
-    startAvahiAsync(path.join(Config.chassis.dir, 'btmp'), hostname)
+    startAvahiAsync(path.join(Config.chassis.dir, 'btmp', 'avahi'), hostname)
       .then(() => {})
       .catch(e => console.log('start avahi error : ', e))
   }
