@@ -39,8 +39,8 @@ const genDaemonConf = hostname => {
   `
 }
 
-const genServiceConf = `
-<?xml version="1.0" standalone='no'?>
+const genServiceConf = 
+`<?xml version="1.0" standalone='no'?>
 <!DOCTYPE service-group SYSTEM "avahi-service.dtd">
 <service-group>
   <name>Phicomm Bootstrap</name>
