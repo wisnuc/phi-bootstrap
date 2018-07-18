@@ -34,6 +34,8 @@ const ServerConf =  Config.server
 const getDeviceInfo = require('../lib/device')
 let deviceInfo = getDeviceInfo()
 
+const startAvahiAsync = require('../lib/avahi')
+
 const ERace = Object.assign(new Error('another operation is in progress'), { code: 'ERACE', status: 403 })
 const EApp404 = Object.assign(new Error('app not installed'), { code: 'ENOTFOUND', status: 404 })
 
@@ -88,6 +90,8 @@ class Model extends EventEmitter {
     this.deb = new Deb(names)
     */
 
+    this.startAvahi()
+
     this.device = new Device(this)
 
     this.platinum = new Platinum(this, path.join(Config.chassis.dir, 'platinum.json'), path.join(Config.chassis.dir, 'btmp'))
@@ -98,12 +102,6 @@ class Model extends EventEmitter {
       get () {
         return this.account.user
       }
-    })
-
-    process.on('uncaughtException', err => {
-      console.log('uncaughtException', err)
-      if (this.appifi) this.appifi.destroy()
-      process.exit()
     })
 
     Object.defineProperty(this, 'appifi', {
@@ -140,6 +138,20 @@ class Model extends EventEmitter {
     
     this.cloudToken = undefined
     this.receiveBindedUser = false // record is received cloud bindedUid
+
+    process.on('uncaughtException', err => {
+      console.log('uncaughtException', err)
+      if (this.appifi) this.appifi.destroy()
+      process.exit()
+    })
+
+  }
+
+  startAvahi() {
+    let hostname = `phi-${ deviceInfo.deviceModel }-${ deviceInfo.deviceSN }`
+    startAvahiAsync(path.join(Config.chassis.dir, 'btmp'), hostname)
+      .then(() => {})
+      .catch(e => console.log('start avahi error : ', e))
   }
 
   handleAppifiStarted () {
