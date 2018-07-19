@@ -44,7 +44,11 @@ class Platinum {
   }
 
   isOn () {
-    return this.setting ? this.setting.isOn ? 'on' : 'off' : 'unset' 
+    return this.setting ? this.setting.isOn : true 
+  }
+
+  state() {
+    return this.setting ? this.setting.isOn ? 'on' : 'off' : 'unset'
   }
 
   setOnOff (isOn, callback) {

@@ -127,6 +127,24 @@ class LedBusy extends LedBase {
   }
 }
 
+class LedShutdown extends LedBase {
+
+  enter () {
+    super.enter()
+    this.writeState(this.constructor.name)
+    this.timer = setInterval(() => {
+      child.exec('ecioctl -s led red off')
+      child.exec('ecioctl -s led blue off')
+      child.exec('ecioctl -s led yellow blink 0f')
+    }, 500)
+  }
+
+  exit() {
+    clearInterval(this.timer)
+    super.exit()
+  }
+}
+
 /**
  * device module control all device interface
  * change led state
