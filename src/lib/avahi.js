@@ -55,11 +55,11 @@ const startAvahiAsync = async (tmpDir, hostname) => {
   await mkdirpAsync(tmpDir)
   let tmpDaemonP = path.join(tmpDir, UUID.v4())
   await fs.writeFileAsync(tmpDaemonP, genDaemonConf(hostname))
-  await fs.renameAsync(tmpDaemonP, avahiDaemonConfP)
+  await child.execAsync(`mv ${ tmpDaemonP } ${ avahiDaemonConfP }`)
 
   let tmpServiceP = path.join(tmpDir, UUID.v4())
   await fs.writeFileAsync(tmpServiceP, genServiceConf)
-  await fs.renameAsync(tmpServiceP, phicommServiceConfP)
+  await child.execAsync(`mv ${ tmpServiceP } ${ phicommServiceConfP }`)
 
   await child.execAsync(`systemctl restart avahi-daemon.service`)
 }

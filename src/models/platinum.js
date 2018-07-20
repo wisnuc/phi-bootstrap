@@ -38,7 +38,7 @@ class Platinum {
 
   checkAndRestart() {
     if ((this.setting && this.setting.isOn) || !this.setting) {
-      return child.exec(`systemctl start peerstar`)
+      return child.exec(`systemctl restart peerstar`)
     }
     return child.exec(`systemctl stop peerstar`)
   }
