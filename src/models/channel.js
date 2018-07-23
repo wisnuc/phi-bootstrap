@@ -263,6 +263,21 @@ class Channel extends EventEmitter {
         // return jwt if is boundUser
         if (paths.length && paths[0] === 'token' && phicommUserId === this.ctx.boundUser.phicommUserId)
           return this.sendToken(message, phicommUserId)
+        if (paths.length && paths[0] === 'platinum' && phicommUserId === this.ctx.boundUser.phicommUserId) {
+          let verb = message.data.verb && message.data.verb.toUpperCase()
+          if (verb === 'GET') {
+            return this.responseToCloud(undefined, { status: this.ctx.platinum.state() }, message)
+          }
+          if (verb === 'POST') {
+            return this.platinum.setOnOff(isOn, err => {
+              if (err) return this.responseToCloud({
+                msg: err.message,
+                status: error.status || 400
+              }, undefined, message)
+              return this.responseToCloud(undefined, {}, message)
+            })
+          }
+        }
         if (this.isAppifiAvaliable()) {
           return this.ctx.appifi.sendMessage(message)
         } else {
@@ -303,34 +318,36 @@ class Channel extends EventEmitter {
         timestamp: new Date().getTime()
       }, this.ctx.conf.secret)
     }
+    this.responseToCloud(undefined, data, message)
+  }
+
+  responseToCloud(error, data, message) {
     let urlTest = `http://sohon2test.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
     let urlDev = `http://sohon2dev.phicomm.com/ResourceManager/nas/callback/${ message.packageParams.waitingServer }/command`
     let url = this.ctx.conf.useDevCloud ? urlDev : urlTest
-    const req = () => {
-      return request({
-        uri: url,
-        method: 'POST',
-        headers: { Authorization: this.ctx.cloudToken },
-        body: true,
-        json: {
-          common: {
-            deviceSN: deviceInfo.deviceSN,
-            msgId: message.msgId,
-            flag: false
-          },
-          data: {
-            res: data
-          }
+    return request({
+      uri: url,
+      method: 'POST',
+      headers: { Authorization: this.ctx.cloudToken },
+      body: true,
+      json: {
+        common: {
+          deviceSN: deviceInfo.deviceSN,
+          msgId: message.msgId,
+          flag: false
+        },
+        data: {
+          res: data,
+          err: error
         }
-      }, (error, response, body) => {
-        if (!error && response.statusCode === 200) {
-          debug(`reqCommand body: ${body}`)
-        } else {
-          debug('send token failed', body)
-        }
-      })
-    }
-    return req()
+      }
+    }, (error, response, body) => {
+      if (!error && response.statusCode === 200) {
+        debug(`reqCommand body: ${body}`)
+      } else {
+        debug('send token failed', body)
+      }
+    })
   }
 
   getState() {
