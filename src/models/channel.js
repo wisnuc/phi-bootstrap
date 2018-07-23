@@ -269,7 +269,7 @@ class Channel extends EventEmitter {
             return this.responseToCloud(undefined, { status: this.ctx.platinum.state() }, message)
           }
           if (verb === 'POST') {
-            return this.ctx.platinum.setOnOff(isOn, err => {
+            return this.ctx.platinum.setOnOff(!!message.data.body.status, err => {
               if (err) return this.responseToCloud({
                 msg: err.message,
                 status: error.status || 400
