@@ -71,9 +71,10 @@ const memory = () => {
  * memory: memory(), 
  */
 module.exports = () => {
-  let releases
+  let releases, swVer
   try {
     releases = JSON.parse(fs.readFileSync('/mnt/reserved/fw_ver_release.json').toString())
+    swVer = fs.readFileSync('/etc/version').toString().trim()
   } catch(e) {
     console.log('==========================')
     console.log('Error: ENOENT fw_ver_release')
@@ -84,7 +85,7 @@ module.exports = () => {
     deviceSN: deviceSN(),
     deviceSecret: deviceSecret(),
     deviceModel: (releases && releases.model) || deviceModel(),
-    softwareVersion: (releases && releases.fw_ver) || softwareVersion(),
+    softwareVersion: swVer || softwareVersion(),
     hardwareVersion: (releases && releases.hw_ver) || hardwareVersion(),
     net: networkInterface()
   }
