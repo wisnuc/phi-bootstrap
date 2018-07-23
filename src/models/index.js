@@ -148,7 +148,8 @@ class Model extends EventEmitter {
   }
 
   startAvahi() {
-    let hostname = `phi-${ deviceInfo.deviceModel }-${ deviceInfo.deviceSN }`
+    let shortMac = deviceInfo.net.mac.split(':').join('').slice(8)
+    let hostname = `phi-${ deviceInfo.deviceModel + shortMac }-${ deviceInfo.deviceSN }`
     startAvahiAsync(path.join(Config.chassis.dir, 'btmp', 'avahi'), hostname)
       .then(() => {})
       .catch(e => console.log('start avahi error : ', e))
