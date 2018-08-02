@@ -3,7 +3,6 @@ const path = require('path')
 const fs = Promise.promisifyAll(require('fs'))
 const EventEmitter = require('events')
 
-const bcrypt = require('bcryptjs')
 const mkdirp = require('mkdirp')
 const mkdirpAsync = Promise.promisify(mkdirp)
 const rimraf = require('rimraf')
