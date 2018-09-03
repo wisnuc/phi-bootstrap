@@ -2,6 +2,7 @@ const Promise = require('bluebird')
 const path = require('path')
 const fs = Promise.promisifyAll(require('fs'))
 const EventEmitter = require('events')
+const os = require('os')
 
 const mkdirp = require('mkdirp')
 const mkdirpAsync = Promise.promisify(mkdirp)
@@ -147,11 +148,30 @@ class Model extends EventEmitter {
   }
 
   startAvahi() {
-    let shortMac = deviceInfo.net.mac.split(':').join('').slice(8)
-    let hostname = `phi-${ deviceInfo.deviceModel + shortMac }-${ deviceInfo.deviceSN }`
-    startAvahiAsync(path.join(Config.chassis.dir, 'btmp', 'avahi'), hostname)
-      .then(() => {})
-      .catch(e => console.log('start avahi error : ', e))
+    this.networkMonitor = setInterval(() => {
+      let interfaces = this.networkInterface()
+      if (!interfaces) {
+        this.lastInterface = undefined
+        return
+      }
+      if (this.lastInterface && this.lastInterface.address === interfaces.address) return
+      this.lastInterface = interfaces
+      let shortMac = deviceInfo.net.mac.split(':').join('').slice(8)
+      let hostname = `phi-${ deviceInfo.deviceModel + shortMac }-${ deviceInfo.deviceSN }`
+      startAvahiAsync(path.join(Config.chassis.dir, 'btmp', 'avahi'), hostname)
+        .then(() => {})
+        .catch(e => console.log('start avahi error : ', e))
+    }, 3000)
+  }
+
+  networkInterface() {
+    let interfaces = os.networkInterfaces()
+    let keys = Object.keys(interfaces).filter(k => !!k && k !== 'lo')
+    if (!keys.length) return
+    let key = keys.find(k => Array.isArray(interfaces[k]) && interfaces[k].length)
+    if (!key) return
+    let ipv4 = interfaces[key].find(x => x.family === 'IPv4')
+    return ipv4
   }
 
   handleAppifiStarted () {
@@ -558,6 +578,8 @@ class Model extends EventEmitter {
 
     this.channel.destroy()
     this.device.destroy()
+
+    clearInterval(this.networkMonitor)
   }
 }
 
